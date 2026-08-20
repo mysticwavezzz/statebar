@@ -434,33 +434,33 @@
       font-weight: bold;
     }
 
-    /* Dynamic Security Watermark Overlay */
-    .exam-watermark-overlay {
+    /* Dynamic Security Watermark Overlay for Question Cards */
+    .card-watermark-overlay {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
       pointer-events: none;
-      z-index: 100;
-      overflow: hidden;
+      z-index: 1;
       display: flex;
-      flex-wrap: wrap;
-      align-content: space-around;
+      flex-direction: column;
       justify-content: space-around;
-      opacity: 0.16;
+      align-items: center;
+      opacity: 0.14;
+      transform: rotate(-15deg);
       user-select: none !important;
       -webkit-user-select: none !important;
+      overflow: hidden;
     }
 
-    .watermark-item {
-      transform: rotate(-25deg);
-      font-size: 13px;
+    .card-watermark-item {
+      font-size: 11px;
       font-weight: bold;
       color: #000080;
-      padding: 35px;
-      white-space: nowrap;
       font-family: monospace;
+      white-space: nowrap;
+      padding: 8px;
       user-select: none !important;
       -webkit-user-select: none !important;
     }
@@ -840,6 +840,8 @@
     const STORAGE_KEY_USER_TRANSFER_SUBMITTED = 'mayflower_user_transfer_submitted';
 
     let isExamActive = false;
+    let screenshotCount = 0;
+    let copyCount = 0;
 
     const defaultRosterSeed = [
       { id: 1, name: "tylrzo, Esq.", sbn: "1019354001", status: "Active", date: "10/14/2024" },
@@ -890,7 +892,10 @@
         return;
       }
 
-      // Lock view and reveal questions
+      // Lock view, reset telemetry counters, and reveal questions
+      screenshotCount = 0;
+      copyCount = 0;
+
       document.getElementById('exam-view-gate').style.display = 'none';
       document.getElementById('exam-view-active').style.display = 'flex';
       document.getElementById('active-candidate-label').innerText = robloxUser;
@@ -900,12 +905,12 @@
 
       openSystemAlert(
         "Testing Environment Activated",
-        `Welcome Candidate ${escapeHTML(robloxUser)}.\n\nAnti-Screenshot Shielding and copy protection are now active. Do not switch tabs or press PrintScreen during the examination.`
+        `Welcome Candidate ${escapeHTML(robloxUser)}.\n\nSecurity telemetry monitoring is active. Dynamic candidate watermarks are stamped across all 10 examination questions.`
       );
     }
 
     /* ==========================================================================
-       RENDER BAR EXAM QUESTIONS
+       RENDER BAR EXAM QUESTIONS WITH PER-CARD WATERMARKS
        ========================================================================== */
     function renderExamQuestions() {
       const container = document.getElementById('exam-questions-container');
@@ -916,19 +921,6 @@
 
       const robloxUser = document.getElementById('exam-candidate-roblox').value.trim() || 'CANDIDATE';
       const discordUser = document.getElementById('exam-candidate-discord').value.trim() || 'N/A';
-
-      // Create dynamic watermark grid
-      const watermarkGrid = document.createElement('div');
-      watermarkGrid.className = 'exam-watermark-overlay';
-
-      const watermarkText = `OFFICIAL EXAMINATION - CANDIDATE: ${escapeHTML(robloxUser)} (${escapeHTML(discordUser)}) - STATE BAR OF MAYFLOWER`;
-      for (let i = 0; i < 18; i++) {
-        const item = document.createElement('div');
-        item.className = 'watermark-item';
-        item.innerText = watermarkText;
-        watermarkGrid.appendChild(item);
-      }
-      container.appendChild(watermarkGrid);
 
       let currentCategory = '';
 
@@ -944,9 +936,22 @@
         const card = document.createElement('div');
         card.className = 'exam-question-card';
         card.style.position = 'relative';
-        card.style.zIndex = '2';
+        card.style.overflow = 'hidden';
 
-        card.innerHTML = `
+        // Inject Candidate Security Watermark directly inside EVERY question card
+        const cardWatermark = document.createElement('div');
+        cardWatermark.className = 'card-watermark-overlay';
+        cardWatermark.innerHTML = `
+          <div class="card-watermark-item">CANDIDATE: ${escapeHTML(robloxUser)} (${escapeHTML(discordUser)}) - STATE BAR OF MAYFLOWER</div>
+          <div class="card-watermark-item">CANDIDATE: ${escapeHTML(robloxUser)} (${escapeHTML(discordUser)}) - STATE BAR OF MAYFLOWER</div>
+          <div class="card-watermark-item">CANDIDATE: ${escapeHTML(robloxUser)} (${escapeHTML(discordUser)}) - STATE BAR OF MAYFLOWER</div>
+        `;
+        card.appendChild(cardWatermark);
+
+        const cardContent = document.createElement('div');
+        cardContent.style.position = 'relative';
+        cardContent.style.zIndex = '2';
+        cardContent.innerHTML = `
           <div class="exam-question-title">${escapeHTML(q.title)}</div>
           <div class="exam-scenario">${escapeHTML(q.scenario).replace(/\n/g, '<br>')}</div>
           <div class="exam-options">
@@ -968,6 +973,7 @@
             </label>
           </div>
         `;
+        card.appendChild(cardContent);
         container.appendChild(card);
       });
     }
@@ -1027,10 +1033,12 @@
         robloxUser: robloxUser,
         discordUser: discordUser || "N/A",
         stateFrom: `Bar Exam Score: ${score}/${total} (${percentage}%) - ${passed ? 'PASSED' : 'FAILED'}`,
-        evidence: `Official 10-Question State Bar Examination. Result: ${score}/${total} (${percentage}%). Details: ${breakdown.join(' | ')}`,
+        evidence: `Official 10-Question State Bar Examination. Result: ${score}/${total} (${percentage}%). Security Audit Telemetry: ${screenshotCount} Screenshot Attempt(s), ${copyCount} Copy/Selection Attempt(s). Details: ${breakdown.join(' | ')}`,
         status: "Pending Review",
         score: `${percentage}%`,
         passed: passed,
+        screenshotAttempts: screenshotCount,
+        copyAttempts: copyCount,
         date: dateStr
       };
 
@@ -1046,55 +1054,54 @@
 
       openSystemAlert(
         "Examination Submitted & Logged",
-        `SUCCESS: Bar Examination for candidate "${escapeHTML(robloxUser)}" completed.\n\nScore: ${score} / ${total} (${percentage}%)\nResult: ${passed ? 'PASSED (70%+)' : 'FAILED'}\n\nYour exam result has been logged into the Central Database for Executive Review.`
+        `SUCCESS: Bar Examination for candidate "${escapeHTML(robloxUser)}" completed.\n\nScore: ${score} / ${total} (${percentage}%)\nResult: ${passed ? 'PASSED (70%+)' : 'FAILED'}\n\nSecurity Telemetry Audit:\n• Screenshot Attempts: ${screenshotCount}\n• Copy / Selection Attempts: ${copyCount}\n\nYour exam result and security audit log have been recorded into the Central Database for Executive Review.`
       );
     }
 
     /* ==========================================================================
-       ANTI-SCREENSHOT & COPY PROTECTION SHIELD
+       SILENT SECURITY TELEMETRY AUDITING
        ========================================================================== */
-    function triggerScreenshotShield() {
-      if (isExamActive) {
-        document.body.classList.add('shield-active');
-        document.getElementById('screenshot-shield').style.display = 'flex';
-      }
-    }
-
-    function dismissScreenshotShield() {
-      document.body.classList.remove('shield-active');
-      document.getElementById('screenshot-shield').style.display = 'none';
-    }
-
-    // Intercept explicit screenshot and print key events only
+    // Track screenshot and print key shortcuts silently without warning popups
     window.addEventListener('keydown', (e) => {
       if (!isExamActive) return;
 
       // PrintScreen key
       if (e.key === 'PrintScreen' || e.keyCode === 44) {
-        e.preventDefault();
-        triggerScreenshotShield();
+        screenshotCount++;
       }
 
       // Windows + Shift + S (Snipping Tool) or Mac Cmd + Shift + 3 / 4 / 5
       if ((e.shiftKey && (e.key === 'S' || e.key === 's')) ||
           ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5'))) {
         if (e.ctrlKey || e.metaKey || e.winKey || e.altKey) {
-          e.preventDefault();
-          triggerScreenshotShield();
+          screenshotCount++;
         }
       }
 
       // Print shortcut (Ctrl + P / Cmd + P)
       if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
-        e.preventDefault();
-        triggerScreenshotShield();
+        screenshotCount++;
+      }
+
+      // Copy / Cut shortcuts (Ctrl + C, Ctrl + X)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C' || e.key === 'x' || e.key === 'X')) {
+        copyCount++;
       }
     }, true);
 
     window.addEventListener('keyup', (e) => {
       if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) {
-        triggerScreenshotShield();
+        screenshotCount++;
       }
+    }, true);
+
+    // Track text selection and right-click copy attempts silently
+    document.addEventListener('selectstart', () => {
+      if (isExamActive) copyCount++;
+    }, true);
+
+    document.addEventListener('copy', () => {
+      if (isExamActive) copyCount++;
     }, true);
 
     /* ==========================================================================
