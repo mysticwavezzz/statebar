@@ -19,6 +19,7 @@ const {
   sendNextDmExamQuestion,
   handleDmExamAnswer
 } = require('../utils/dmExamManager');
+const { getRoster, addBarLicense } = require('../utils/rosterStore');
 
 // Temporary in-memory cache for filings data pending clerk review
 const pendingFilings = new Map();
@@ -279,6 +280,25 @@ async function handleInteraction(interaction) {
           new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('evidence').setLabel('Proof / Evidence of Active Certification').setPlaceholder('Link to bar license certificate...').setStyle(TextInputStyle.Paragraph).setRequired(true))
         );
         await interaction.showModal(modal);
+        return;
+      }
+
+      // State Bar Portal: View Bar Roster (Ephemeral - Only You Can See)
+      if (customId === 'bar_view_roster') {
+        const roster = getRoster();
+
+        const rosterFormatted = roster.length > 0
+          ? roster.map((r, i) => `**${i + 1}. ${r.name}**\n├ License (SBN): \`${r.sbn}\`\n├ Status: \`${r.status}\` \n└ Date Admitted: \`${r.date}\``).join('\n\n')
+          : '*No active bar licenses recorded.*';
+
+        const embed = new EmbedBuilder()
+          .setAuthor({ name: 'State Bar of Harrison County', iconURL: guildIcon || undefined })
+          .setTitle('Official Attorney Bar Roster')
+          .setColor('#6B21A8')
+          .setDescription(`Total Admitted Attorneys: **${roster.length}**\n\n${rosterFormatted}`)
+          .setFooter({ text: 'Official Public Record • Only Visible to You' });
+
+        await interaction.reply({ embeds: [embed], ephemeral: true });
         return;
       }
 

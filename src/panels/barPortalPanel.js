@@ -6,15 +6,13 @@ const config = require('../../config.json');
  * @param {string|null} guildIconUrl 
  */
 function getBarPortalPanel(guildIconUrl) {
-  const websiteUrl = config.websiteUrl || 'https://mysticwavezzz.github.io/statebar/';
-
   const embed = new EmbedBuilder()
     .setAuthor({
       name: 'State Bar of Harrison County',
       iconURL: guildIconUrl || undefined
     })
     .setTitle('Bar Admission & Reciprocal Transfer Portal')
-    .setDescription('Welcome to the official State Bar Admission Portal. Candidates may petition for bar admission by sitting for the official 25-Question Statutory Examination or submitting a Reciprocal Bar Transfer Application.')
+    .setDescription('Welcome to the official State Bar Admission Portal. Candidates may petition for bar admission by sitting for the official 25-Question Statutory Examination or submitting a Reciprocal Bar Transfer Application.\n\n*Notice: The Web Workstation is currently undergoing scheduled maintenance. Please use the DM options below to take your exam or submit transfers.*')
     .setColor('#6B21A8')
     .addFields(
       {
@@ -32,24 +30,20 @@ function getBarPortalPanel(guildIconUrl) {
 
   const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setLabel('Take Exam via Website')
-      .setStyle(ButtonStyle.Link)
-      .setURL(websiteUrl),
-    new ButtonBuilder()
       .setCustomId('bar_exam_via_dms')
       .setLabel('Take Exam via DMs')
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId('bar_transfer_via_dms')
+      .setLabel('Transfer via DMs')
       .setStyle(ButtonStyle.Secondary)
   );
 
   const row2 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setLabel('Transfer via Website')
-      .setStyle(ButtonStyle.Link)
-      .setURL(websiteUrl),
-    new ButtonBuilder()
-      .setCustomId('bar_transfer_via_dms')
-      .setLabel('Transfer via DMs')
-      .setStyle(ButtonStyle.Secondary)
+      .setCustomId('bar_view_roster')
+      .setLabel('View Bar Roster')
+      .setStyle(ButtonStyle.Primary)
   );
 
   return { embeds: [embed], components: [row1, row2] };
