@@ -364,6 +364,7 @@
               <span style="color: #666; font-size: 10px; margin-left: 6px;">Review and Accept or Deny candidate admissions</span>
             </div>
             <div style="display: flex; gap: 6px;">
+              <button class="win-button" style="background: #e2e3e5; color: #383d41;" onclick="configureDiscordWebhook()">[ Config Discord Webhook ]</button>
               <button class="win-button" style="background: #f8d7da; border-color: #f5c6cb; color: #721c24; font-weight: bold;" onclick="clearAllDatabaseLogs()">[ Purge All Database Logs ]</button>
               <button class="win-button" onclick="seedSampleData()">+ Load Sample Submissions</button>
               <button class="win-button" onclick="renderApplicationsTable()">Refresh List</button>
@@ -630,6 +631,55 @@
       });
     }
 
+    function configureDiscordWebhook() {
+      const currentUrl = localStorage.getItem('mayflower_cert_webhook_url') || '';
+      const newUrl = prompt("Enter Discord Webhook URL for State Bar Certification Channel (1539839511544991785):\n\n(Create via Channel Settings -> Integrations -> Webhooks -> Copy Webhook URL)", currentUrl);
+      if (newUrl !== null) {
+        localStorage.setItem('mayflower_cert_webhook_url', newUrl.trim());
+        alert("Discord Webhook URL saved successfully!");
+      }
+    }
+
+    async function sendDiscordCertLog(robloxUser, scorePercentage) {
+      let robloxId = '8223519700';
+      try {
+        const robloxRes = await fetch('https://users.roblox.com/v1/usernames/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usernames: [robloxUser], excludeBannedUsers: false })
+        });
+        const robloxData = await robloxRes.json();
+        if (robloxData.data && robloxData.data.length > 0) {
+          robloxId = robloxData.data[0].id;
+        }
+      } catch (e) {}
+
+      const profileUrl = `https://www.roblox.com/users/${robloxId}/profile`;
+      const webhookUrl = localStorage.getItem('mayflower_cert_webhook_url');
+
+      if (webhookUrl) {
+        fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            embeds: [
+              {
+                title: 'Certification Log',
+                description: `This log hereby certifies that [${robloxUser}](${profileUrl}) has been duly admitted to the Bar of Harrison County, passing with a score of \`\`${scorePercentage}\`\`.`,
+                color: 3046706
+              }
+            ]
+          })
+        }).catch(err => console.warn('[Webhook Error]:', err));
+      }
+
+      fetch('http://localhost:3000/api/certify-bar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ robloxUser, score: scorePercentage, robloxId })
+      }).catch(() => {});
+    }
+
     function acceptApplication(index) {
       const apps = getApplications();
       const app = apps[index];
@@ -661,23 +711,7 @@
       const examScoreMatch = (app.stateFrom || '').match(/(\d+%)|(\d+\.\d+%)/);
       const scorePercentage = examScoreMatch ? examScoreMatch[0] : '79.11%';
 
-      const certPayload = JSON.stringify({
-        robloxUser: app.robloxUser,
-        score: scorePercentage,
-        robloxId: '8223519700'
-      });
-
-      fetch('http://localhost:3000/api/certify-bar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: certPayload
-      }).catch(() => {
-        fetch('/api/certify-bar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: certPayload
-        }).catch(err => console.warn('[Certify Bar API Warning]:', err));
-      });
+      sendDiscordCertLog(app.robloxUser, scorePercentage);
 
       alert(`SUCCESS: Application Accepted!\nCandidate: ${app.robloxUser}\nGenerated 10-Digit Bar License: ${generatedSBN}\nStatus: ${selectedStatus}\nAdded to Public Bar Roster and logged to State Bar Certification Channel.`);
       renderApplicationsTable();
