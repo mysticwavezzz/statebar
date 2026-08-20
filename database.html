@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>State Bar of Mayflower - Central Database Portal (/database.html)</title>
+  <style>
+    /* ==========================================================================
+       WINDOWS 2000 / 98 SYSTEM PALETTE & LAYOUT
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    body, html {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: "Tahoma", "MS Sans Serif", "Segoe UI", sans-serif;
+      font-size: 11px;
+      color: #000000;
+      background-color: #1a1a1a;
+      cursor: default;
+    }
+
+    :root {
+      --win-bg: #c0c0c0;
+      --win-light: #ffffff;
+      --win-highlight: #dfdfdf;
+      --win-shadow: #808080;
+      --win-dark-shadow: #000000;
+      --titlebar-start: #000080;
+      --titlebar-end: #1084d0;
+      --titlebar-text: #ffffff;
+      --selection-bg: #000080;
+      --selection-text: #ffffff;
+    }
+
+    .outset-bevel {
+      border-top: 1px solid var(--win-light);
+      border-left: 1px solid var(--win-light);
+      border-right: 1px solid var(--win-dark-shadow);
+      border-bottom: 1px solid var(--win-dark-shadow);
+      box-shadow: inset 1px 1px 0px var(--win-highlight), inset -1px -1px 0px var(--win-shadow);
+    }
+
+    .inset-bevel {
+      border-top: 1px solid var(--win-shadow);
+      border-left: 1px solid var(--win-shadow);
+      border-right: 1px solid var(--win-light);
+      border-bottom: 1px solid var(--win-light);
+      box-shadow: inset 1px 1px 0px var(--win-dark-shadow), inset -1px -1px 0px var(--win-highlight);
+      background-color: #ffffff;
+    }
+
+    .win-button {
+      background-color: var(--win-bg);
+      border-top: 1px solid var(--win-light);
+      border-left: 1px solid var(--win-light);
+      border-right: 1px solid var(--win-dark-shadow);
+      border-bottom: 1px solid var(--win-dark-shadow);
+      box-shadow: inset 1px 1px 0px var(--win-highlight), inset -1px -1px 0px var(--win-shadow);
+      padding: 3px 10px;
+      font-family: inherit;
+      font-size: 11px;
+      color: #000000;
+      outline: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-height: 22px;
+    }
+
+    .win-button:active {
+      border-top: 1px solid var(--win-dark-shadow);
+      border-left: 1px solid var(--win-dark-shadow);
+      border-right: 1px solid var(--win-light);
+      border-bottom: 1px solid var(--win-light);
+      box-shadow: inset 1px 1px 0px var(--win-shadow), inset -1px -1px 0px var(--win-highlight);
+      padding: 4px 9px 2px 11px;
+    }
+
+    .win-button.btn-success {
+      background-color: #d4edda;
+      border-color: #28a745;
+      font-weight: bold;
+      color: #155724;
+    }
+
+    .win-button.btn-danger {
+      background-color: #f8d7da;
+      border-color: #dc3545;
+      font-weight: bold;
+      color: #721c24;
+    }
+
+    .win-input, .win-select, textarea.win-input {
+      background-color: #ffffff;
+      border-top: 1px solid var(--win-shadow);
+      border-left: 1px solid var(--win-shadow);
+      border-right: 1px solid var(--win-light);
+      border-bottom: 1px solid var(--win-light);
+      box-shadow: inset 1px 1px 0px var(--win-dark-shadow);
+      padding: 3px 5px;
+      font-family: inherit;
+      font-size: 11px;
+      outline: none;
+      color: #000000;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    #desktop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #008080;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .db-window {
+      width: 920px;
+      height: 640px;
+      max-width: 98vw;
+      max-height: 98vh;
+      background-color: var(--win-bg);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 4px 16px rgba(0, 0, 0, 0.8);
+    }
+
+    .win-titlebar {
+      height: 22px;
+      background: linear-gradient(90deg, var(--titlebar-start), var(--titlebar-end));
+      color: var(--titlebar-text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 4px;
+      font-weight: bold;
+      font-size: 11px;
+    }
+
+    .win-menubar {
+      display: flex;
+      background-color: var(--win-bg);
+      padding: 2px 6px;
+      gap: 12px;
+      border-bottom: 1px solid var(--win-shadow);
+    }
+
+    .win-menu-item {
+      cursor: pointer;
+    }
+
+    .win-menu-item span {
+      text-decoration: underline;
+    }
+
+    .db-tabs-header {
+      display: flex;
+      gap: 2px;
+      padding: 6px 6px 0 6px;
+      background-color: var(--win-bg);
+      border-bottom: 1px solid var(--win-shadow);
+    }
+
+    .db-tab-btn {
+      padding: 4px 14px;
+      background-color: var(--win-bg);
+      border-top: 1px solid var(--win-light);
+      border-left: 1px solid var(--win-light);
+      border-right: 1px solid var(--win-dark-shadow);
+      border-bottom: 1px solid var(--win-shadow);
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      outline: none;
+      border-top-left-radius: 3px;
+      border-top-right-radius: 3px;
+      margin-bottom: -1px;
+    }
+
+    .db-tab-btn.active {
+      background-color: var(--win-bg);
+      border-bottom: 1px solid var(--win-bg);
+      font-weight: bold;
+      z-index: 2;
+      box-shadow: inset 1px 1px 0px var(--win-highlight);
+    }
+
+    .win-body {
+      flex: 1;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+      background-color: var(--win-bg);
+    }
+
+    .db-tab-page {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      height: 100%;
+    }
+
+    .db-tab-page.active {
+      display: flex;
+    }
+
+    .db-table-container {
+      flex: 1;
+      overflow: auto;
+      background-color: #ffffff;
+    }
+
+    .db-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      text-align: left;
+    }
+
+    .db-table th {
+      position: sticky;
+      top: 0;
+      background-color: var(--win-bg);
+      border-top: 1px solid var(--win-light);
+      border-left: 1px solid var(--win-light);
+      border-right: 1px solid var(--win-dark-shadow);
+      border-bottom: 1px solid var(--win-dark-shadow);
+      box-shadow: inset 1px 1px 0px var(--win-highlight), inset -1px -1px 0px var(--win-shadow);
+      padding: 4px 6px;
+      font-weight: bold;
+      z-index: 5;
+    }
+
+    .db-table td {
+      padding: 5px 6px;
+      border-right: 1px solid #e0e0e0;
+      border-bottom: 1px solid #e0e0e0;
+      vertical-align: middle;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .db-table tr:hover {
+      background-color: #f5f5f5;
+    }
+
+    .badge-status {
+      display: inline-block;
+      padding: 2px 6px;
+      font-family: monospace;
+      font-size: 10px;
+      font-weight: bold;
+      border-radius: 2px;
+    }
+
+    .status-active { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .status-suspended { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .status-inactive { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
+    .status-disbarred { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .status-pending { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
+    .status-accepted { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .status-denied { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .fieldset-box {
+      border: 1px solid var(--win-shadow);
+      box-shadow: 1px 1px 0px var(--win-light);
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .fieldset-box legend {
+      padding: 0 4px;
+      font-weight: bold;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .win-statusbar {
+      height: 20px;
+      margin: 0 2px 2px 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: #333333;
+    }
+
+    .win-statusbar-cell {
+      padding: 1px 6px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="desktop">
+    <div class="db-window outset-bevel">
+      <!-- Titlebar -->
+      <div class="win-titlebar">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span>[DB]</span>
+          <span>State Bar of Mayflower - Central Database Portal</span>
+        </div>
+        <div style="display: flex; gap: 2px;">
+          <button class="win-button" style="padding:0 4px; height:14px; min-height:14px; font-size:9px;" onclick="window.location.href='index.html'">&lt;- Back to Workstation</button>
+        </div>
+      </div>
+
+      <!-- Menu bar -->
+      <div class="win-menubar">
+        <div class="win-menu-item"><span>F</span>ile</div>
+        <div class="win-menu-item"><span>E</span>dit</div>
+        <div class="win-menu-item"><span>V</span>iew</div>
+        <div class="win-menu-item"><span>A</span>dmin Actions</div>
+        <div class="win-menu-item"><span>H</span>elp</div>
+      </div>
+
+      <!-- Tab header -->
+      <div class="db-tabs-header">
+        <button class="db-tab-btn active" id="db-tab-btn-apps" onclick="switchDbTab('apps')">Pending Applications &amp; Transfers</button>
+        <button class="db-tab-btn" id="db-tab-btn-roster" onclick="switchDbTab('roster')">Configurable Bar Roster</button>
+        <button class="db-tab-btn" id="db-tab-btn-exam" onclick="switchDbTab('exam')">Submit / Record Bar Exam Result</button>
+      </div>
+
+      <!-- Body -->
+      <div class="win-body">
+        
+        <!-- PAGE 1: PENDING APPLICATIONS & BAR TRANSFERS -->
+        <div id="db-tab-apps" class="db-tab-page active">
+          <div class="toolbar-row">
+            <div>
+              <strong>Submitted Bar Transfers &amp; Exam Results:</strong>
+              <span style="color: #666; font-size: 10px; margin-left: 6px;">Review and Accept or Deny candidate admissions</span>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button class="win-button" onclick="seedSampleData()">+ Load Sample Submissions</button>
+              <button class="win-button" onclick="renderApplicationsTable()">Refresh List</button>
+            </div>
+          </div>
+
+          <div class="db-table-container inset-bevel">
+            <table class="db-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Roblox Username</th>
+                  <th>Discord Username</th>
+                  <th>State / Exam Details</th>
+                  <th>Evidence of Certification</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th style="width: 160px; text-align: center;">Executive Action</th>
+                </tr>
+              </thead>
+              <tbody id="apps-tbody">
+                <!-- Injected via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PAGE 2: CONFIGURABLE BAR ROSTER -->
+        <div id="db-tab-roster" class="db-tab-page">
+          <div class="fieldset-box">
+            <legend>Quick Attorney Registry / License Generator</legend>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <label>Roblox User:</label>
+              <input type="text" id="manual-roblox" class="win-input" placeholder="e.g. AttorneyUser" style="width: 140px;">
+              
+              <label>10-Digit Bar License Number:</label>
+              <input type="text" id="manual-sbn" class="win-input" placeholder="Auto-generates if empty..." style="width: 160px;">
+              
+              <label>Status:</label>
+              <select id="manual-status" class="win-select">
+                <option value="Active">Active</option>
+                <option value="Suspended">Suspended</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Disbarred">Disbarred</option>
+              </select>
+
+              <button class="win-button btn-success" onclick="addManualAttorney()">+ Add to Roster</button>
+              <button class="win-button" onclick="generateRandom10DigitSBN('manual-sbn')">Gen 10-Digit SBN</button>
+            </div>
+          </div>
+
+          <div class="toolbar-row">
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span>Filter Roster:</span>
+              <input type="text" id="db-roster-search" class="win-input" placeholder="Search by name, SBN..." onkeyup="renderRosterTable()" style="width: 180px;">
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button class="win-button" onclick="resetRosterToDefaults()">Reset Default Roster</button>
+              <button class="win-button" onclick="renderRosterTable()">Refresh Table</button>
+            </div>
+          </div>
+
+          <div class="db-table-container inset-bevel">
+            <table class="db-table">
+              <thead>
+                <tr>
+                  <th>Roblox Username</th>
+                  <th>10-Digit Bar License Number</th>
+                  <th>Current Status</th>
+                  <th>Registry Date</th>
+                  <th style="width: 140px; text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="db-roster-tbody">
+                <!-- Injected via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PAGE 3: SUBMIT / RECORD BAR EXAM RESULT -->
+        <div id="db-tab-exam" class="db-tab-page">
+          <div class="fieldset-box" style="max-width: 550px; margin: 20px auto;">
+            <legend>Record Bar Exam Candidate Results</legend>
+            <p style="margin-bottom: 12px; color: #444;">Record official Bar Examination score &amp; results to send to the executive decision queue.</p>
+            
+            <div class="form-grid">
+              <label for="exam-roblox">Roblox Username:</label>
+              <input type="text" id="exam-roblox" class="win-input" placeholder="e.g. CandidateLawyer">
+
+              <label for="exam-discord">Discord Username:</label>
+              <input type="text" id="exam-discord" class="win-input" placeholder="e.g. candidate#1234">
+
+              <label for="exam-score">Exam Score / Result:</label>
+              <input type="text" id="exam-score" class="win-input" placeholder="e.g. PASSED ( Score: 90% )">
+
+              <label for="exam-evidence">Examiner Notes / Proof:</label>
+              <textarea id="exam-evidence" class="win-input" rows="3" placeholder="Enter bar examination sheet serial number or transcript link..."></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+              <button class="win-button btn-success" onclick="submitBarExamResult()">Submit Exam Result to Database</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Statusbar -->
+      <div class="win-statusbar">
+        <div class="win-statusbar-cell inset-bevel" id="db-status-bar" style="flex: 2;">Database Status: ONLINE &amp; SYNCED</div>
+        <div class="win-statusbar-cell inset-bevel" style="flex: 1;">Security Level: DIRECTOR / ROOT</div>
+        <div class="win-statusbar-cell inset-bevel" style="width: 120px;">Mayflower SBN v3.0</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       CENTRAL STORAGE KEYS & DEFAULT SEED DATA
+       ========================================================================== */
+    const STORAGE_KEY_ROSTER = 'mayflower_bar_roster';
+    const STORAGE_KEY_APPS = 'mayflower_bar_applications';
+
+    // Default Seed Roster with 10-Digit Bar License Numbers
+    const defaultRosterSeed = [
+      { id: 1, name: "tylrzo, Esq.", sbn: "1019354001", status: "Active", date: "10/14/2024" },
+      { id: 2, name: "ThatUniversal", sbn: "1019517002", status: "Active", date: "11/02/2024" },
+      { id: 3, name: "Dr. 40QH Goldstein", sbn: "1019506003", status: "Active", date: "11/04/2024" },
+      { id: 4, name: "Detachment_Result", sbn: "1019501004", status: "Active", date: "11/18/2024" }
+    ];
+
+    function getRoster() {
+      const data = localStorage.getItem(STORAGE_KEY_ROSTER);
+      if (!data) {
+        localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(defaultRosterSeed));
+        return defaultRosterSeed;
+      }
+      return JSON.parse(data);
+    }
+
+    function saveRoster(rosterList) {
+      localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(rosterList));
+      notifyStorageChange();
+    }
+
+    function getApplications() {
+      const data = localStorage.getItem(STORAGE_KEY_APPS);
+      return data ? JSON.parse(data) : [];
+    }
+
+    function saveApplications(appsList) {
+      localStorage.setItem(STORAGE_KEY_APPS, JSON.stringify(appsList));
+      notifyStorageChange();
+    }
+
+    function notifyStorageChange() {
+      window.dispatchEvent(new Event('storage'));
+    }
+
+    // Helper: Generate authentic 10-digit Bar License Number
+    function generate10DigitSBN() {
+      const prefix = "10";
+      const randomDigits = Math.floor(10000000 + Math.random() * 90000000).toString();
+      return prefix + randomDigits;
+    }
+
+    function generateRandom10DigitSBN(inputId) {
+      document.getElementById(inputId).value = generate10DigitSBN();
+    }
+
+    /* ==========================================================================
+       TAB SWITCHING
+       ========================================================================== */
+    function switchDbTab(tabName) {
+      document.querySelectorAll('.db-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.db-tab-page').forEach(page => page.classList.remove('active'));
+
+      document.getElementById(`db-tab-btn-${tabName}`).classList.add('active');
+      document.getElementById(`db-tab-${tabName}`).classList.add('active');
+
+      if (tabName === 'apps') renderApplicationsTable();
+      if (tabName === 'roster') renderRosterTable();
+    }
+
+    /* ==========================================================================
+       PAGE 1: APPLICATIONS & TRANSFERS LISTING
+       ========================================================================== */
+    function renderApplicationsTable() {
+      const tbody = document.getElementById('apps-tbody');
+      tbody.innerHTML = '';
+      const apps = getApplications();
+
+      if (apps.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #777; padding: 20px;">No pending bar transfers or exam results found in database. Use "+ Load Sample Submissions" or submit a Bar Transfer / Exam from index.html.</td></tr>`;
+        return;
+      }
+
+      apps.forEach((app, idx) => {
+        const tr = document.createElement('tr');
+        
+        let statusBadgeClass = 'status-pending';
+        if (app.status === 'Accepted') statusBadgeClass = 'status-accepted';
+        if (app.status === 'Denied') statusBadgeClass = 'status-denied';
+
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(app.type || 'Bar Transfer')}</strong></td>
+          <td style="font-weight: bold;">${escapeHTML(app.robloxUser)}</td>
+          <td>${escapeHTML(app.discordUser || 'N/A')}</td>
+          <td>${escapeHTML(app.stateFrom || app.details || 'N/A')}</td>
+          <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHTML(app.evidence || 'N/A')}</td>
+          <td>${app.date}</td>
+          <td><span class="badge-status ${statusBadgeClass}">${escapeHTML(app.status)}</span></td>
+          <td style="text-align: center;">
+            ${app.status === 'Pending Review' || !app.status ? `
+              <button class="win-button btn-success" style="font-size: 10px; padding: 2px 6px;" onclick="acceptApplication(${idx})">Accept</button>
+              <button class="win-button btn-danger" style="font-size: 10px; padding: 2px 6px;" onclick="denyApplication(${idx})">Deny</button>
+            ` : `<span style="font-size: 10px; color: #555;">${app.sbn ? `SBN: ${app.sbn}` : 'Processed'}</span>`}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function acceptApplication(index) {
+      const apps = getApplications();
+      const app = apps[index];
+      if (!app) return;
+
+      const generatedSBN = generate10DigitSBN();
+      const selectedStatus = prompt(`Accepting Bar Admission for ${app.robloxUser}.\nAssign Status (Active, Suspended, Inactive, Disbarred):`, "Active") || "Active";
+
+      const roster = getRoster();
+      const today = new Date();
+      const dateStr = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
+
+      // Add to roster
+      roster.push({
+        id: Date.now(),
+        name: app.robloxUser,
+        sbn: generatedSBN,
+        status: selectedStatus,
+        date: dateStr
+      });
+      saveRoster(roster);
+
+      // Update application
+      app.status = 'Accepted';
+      app.sbn = generatedSBN;
+      saveApplications(apps);
+
+      alert(`SUCCESS: Application Accepted!\nCandidate: ${app.robloxUser}\nGenerated 10-Digit Bar License: ${generatedSBN}\nStatus: ${selectedStatus}\nAdded to Public Bar Roster.`);
+      renderApplicationsTable();
+    }
+
+    function denyApplication(index) {
+      const apps = getApplications();
+      const app = apps[index];
+      if (!app) return;
+
+      if (confirm(`Are you sure you want to DENY the application for ${app.robloxUser}?`)) {
+        app.status = 'Denied';
+        saveApplications(apps);
+        renderApplicationsTable();
+      }
+    }
+
+    function seedSampleData() {
+      const apps = getApplications();
+      apps.push(
+        {
+          id: Date.now() + 1,
+          type: "Bar Transfer",
+          robloxUser: "RobloxLawyer_Pro",
+          discordUser: "roblox_pro#1122",
+          stateFrom: "State of Firestone",
+          evidence: "https://mayflower.gov/cert/998214 - Active License #49281",
+          status: "Pending Review",
+          date: new Date().toLocaleDateString()
+        },
+        {
+          id: Date.now() + 2,
+          type: "Bar Exam Result",
+          robloxUser: "JusticeSeeker99",
+          discordUser: "justice_seeker#4040",
+          stateFrom: "Bar Exam Score: 90% (9/10) - PASSED",
+          evidence: "Official State Bar Examination Paper",
+          status: "Pending Review",
+          date: new Date().toLocaleDateString()
+        }
+      );
+      saveApplications(apps);
+      renderApplicationsTable();
+    }
+
+    /* ==========================================================================
+       PAGE 2: CONFIGURABLE BAR ROSTER
+       ========================================================================== */
+    function renderRosterTable() {
+      const tbody = document.getElementById('db-roster-tbody');
+      tbody.innerHTML = '';
+      const roster = getRoster();
+      const query = (document.getElementById('db-roster-search')?.value || '').toLowerCase();
+
+      const filtered = roster.filter(attorney => 
+        attorney.name.toLowerCase().includes(query) ||
+        attorney.sbn.toString().includes(query) ||
+        attorney.status.toLowerCase().includes(query)
+      );
+
+      filtered.forEach((item) => {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td style="font-weight: bold;">${escapeHTML(item.name)}</td>
+          <td style="font-family: monospace; font-size: 11px;">${item.sbn}</td>
+          <td>
+            <select class="win-select" onchange="changeRosterStatus(${item.id}, this.value)">
+              <option value="Active" ${item.status === 'Active' ? 'selected' : ''}>Active</option>
+              <option value="Suspended" ${item.status === 'Suspended' ? 'selected' : ''}>Suspended</option>
+              <option value="Inactive" ${item.status === 'Inactive' ? 'selected' : ''}>Inactive</option>
+              <option value="Disbarred" ${item.status === 'Disbarred' ? 'selected' : ''}>Disbarred</option>
+            </select>
+          </td>
+          <td>${item.date}</td>
+          <td style="text-align: center;">
+            <button class="win-button btn-danger" style="font-size: 10px; padding: 1px 5px;" onclick="removeRosterItem(${item.id})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function changeRosterStatus(id, newStatus) {
+      const roster = getRoster();
+      const target = roster.find(item => item.id === id);
+      if (target) {
+        target.status = newStatus;
+        saveRoster(roster);
+        renderRosterTable();
+      }
+    }
+
+    function addManualAttorney() {
+      const robloxUser = document.getElementById('manual-roblox').value.trim();
+      let sbn = document.getElementById('manual-sbn').value.trim();
+      const status = document.getElementById('manual-status').value;
+
+      if (!robloxUser) {
+        alert("Please enter a Roblox Username.");
+        return;
+      }
+
+      if (!sbn || sbn.length !== 10 || isNaN(sbn)) {
+        sbn = generate10DigitSBN();
+      }
+
+      const roster = getRoster();
+      const today = new Date();
+      const dateStr = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
+
+      roster.push({
+        id: Date.now(),
+        name: robloxUser,
+        sbn: sbn,
+        status: status,
+        date: dateStr
+      });
+
+      saveRoster(roster);
+      document.getElementById('manual-roblox').value = '';
+      document.getElementById('manual-sbn').value = '';
+      renderRosterTable();
+      alert(`Attorney ${robloxUser} added with 10-digit SBN ${sbn}!`);
+    }
+
+    function removeRosterItem(id) {
+      if (confirm("Are you sure you want to remove this attorney from the Bar Roster?")) {
+        let roster = getRoster();
+        roster = roster.filter(item => item.id !== id);
+        saveRoster(roster);
+        renderRosterTable();
+      }
+    }
+
+    function resetRosterToDefaults() {
+      if (confirm("Reset roster to default seed data?")) {
+        saveRoster(defaultRosterSeed);
+        renderRosterTable();
+      }
+    }
+
+    /* ==========================================================================
+       PAGE 3: SUBMIT BAR EXAM RESULT
+       ========================================================================== */
+    function submitBarExamResult() {
+      const robloxUser = document.getElementById('exam-roblox').value.trim();
+      const discordUser = document.getElementById('exam-discord').value.trim();
+      const score = document.getElementById('exam-score').value.trim();
+      const evidence = document.getElementById('exam-evidence').value.trim();
+
+      if (!robloxUser || !score) {
+        alert("Please fill in Roblox Username and Exam Score.");
+        return;
+      }
+
+      const apps = getApplications();
+      apps.push({
+        id: Date.now(),
+        type: "Bar Exam Result",
+        robloxUser: robloxUser,
+        discordUser: discordUser,
+        stateFrom: `Exam Result: ${score}`,
+        evidence: evidence || "Official Bar Exam Transcript",
+        status: "Pending Review",
+        date: new Date().toLocaleDateString()
+      });
+
+      saveApplications(apps);
+      document.getElementById('exam-roblox').value = '';
+      document.getElementById('exam-discord').value = '';
+      document.getElementById('exam-score').value = '';
+      document.getElementById('exam-evidence').value = '';
+
+      alert(`Bar Exam Result for ${robloxUser} submitted to Central Database Queue!`);
+      switchDbTab('apps');
+    }
+
+    function escapeHTML(str) {
+      return String(str || '').replace(/[&<>"']/g, match => {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[match];
+      });
+    }
+
+    // Initialize Page
+    document.addEventListener('DOMContentLoaded', () => {
+      getRoster();
+      renderApplicationsTable();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>State Bar of Mayflower - Directory Workstation</title>
+  <style>
+    /* ==========================================================================
+       WINDOWS 2000 / 98 SYSTEM PALETTE & LAYOUT
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    body, html {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: "Tahoma", "MS Sans Serif", "Segoe UI", sans-serif;
+      font-size: 11px;
+      color: #000000;
+      background-color: #1a1a1a;
+      cursor: default;
+    }
+
+    :root {
+      --win-bg: #c0c0c0;
+      --win-light: #ffffff;
+      --win-highlight: #dfdfdf;
+      --win-shadow: #808080;
+      --win-dark-shadow: #000000;
+      --titlebar-start: #000080;
+      --titlebar-end: #1084d0;
+      --titlebar-text: #ffffff;
+      --selection-bg: #000080;
+      --selection-text: #ffffff;
+    }
+
+    .outset-bevel {
+      border-top: 1px solid var(--win-light);
+      border-left: 1px solid var(--win-light);
+      border-right: 1px solid var(--win-dark-shadow);
+      border-bottom: 1px solid var(--win-dark-shadow);
+      box-shadow: inset 1px 1px 0px var(--win-highlight), inset -1px -1px 0px var(--win-shadow);
+    }
+
+    .inset-bevel {
+      border-top: 1px solid var(--win-shadow);
+      border-left: 1px solid var(--win-shadow);
+      border-right: 1px solid var(--win-light);
+      border-bottom: 1px solid var(--win-light);
+      box-shadow: inset 1px 1px 0px var(--win-dark-shadow), inset -1px -1px 0px var(--win-highlight);
+      background-color: #ffffff;
+    }
+
+    .win-button {
+      background-color: var(--win-bg);
+      border-top: 1px solid var(--win-light);
+      border-left: 1px solid var(--win-light);
+      border-right: 1px solid var(--win-dark-shadow);
+      border-bottom: 1px solid var(--win-dark-shadow);
+      box-shadow: inset 1px 1px 0px var(--win-highlight), inset -1px -1px 0px var(--win-shadow);
+      padding: 3px 10px;
+      font-family: inherit;
+      font-size: 11px;
+      color: #000000;
+      outline: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-height: 22px;
+    }
+
+    .win-button:active {
+      border-top: 1px solid var(--win-dark-shadow);
+      border-left: 1px solid var(--win-dark-shadow);
+      border-right: 1px solid var(--win-light);
+      border-bottom: 1px solid var(--win-light);
+      box-shadow: inset 1px 1px 0px var(--win-shadow), inset -1px -1px 0px var(--win-highlight);
+      padding: 4px 9px 2px 11px;
+    }
+
+    .win-input, .win-select, textarea.win-input {
+      background-color: #ffffff;
+      border-top: 1px solid var(--win-shadow);
+      border-left: 1px solid var(--win-shadow);
+      border-right: 1px solid var(--win-light);
+      border-bottom: 1px solid var(--win-light);
+      box-shadow: inset 1px 1px 0px var(--win-dark-shadow);
+      padding: 3px 5px;
+      font-family: inherit;
+      font-size: 11px;
+      outline: none;
+      color: #000000;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    #desktop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #008080; /* Classic Win98 Teal */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .db-window {
+      width: 960px;
+      height: 660px;
+      max-width: 98vw;
+      max-height: 98vh;
+      background-color: var(--win-bg);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 4px 16px rgba(0, 0, 0, 0.8);
+    }
+
+    .win-titlebar {
+      height: 22px;
+      background: linear-gradient(90deg, var(--titlebar-start), var(--titlebar-end));
+      color: var(--titlebar-text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 4px;
+      font-weight: bold;
+      font-size: 11px;
+    }
+
+    .win-menubar {
+      display: flex;
+      background-color: var(--win-bg);
+      padding: 2px 6px;
+      gap: 12px;
+      border-bottom: 1px solid var(--win-shadow);
+    }
+
+    .win-menu-item {
+      cursor: pointer;
+    }
+
+    .win-menu-item span {
+      text-decoration: underline;
+    }
+
+    .db-tabs-header {
+      display: flex;
+      gap: 2px;
+      padding: 6px 6px 0 6px;
+      background-color: var(--win-bg);
+      border-bottom: 1px solid var(--win-shadow);
+    }
+
+    .db-tab-btn {
+      padding: 4px 14px;
+      background-color: var(--win-bg);
+      border-top: 1px solid var(--win-light);
+      border-left: 1px solid var(--win-light);
+      border-right: 1px solid var(--win-dark-shadow);
+      border-bottom: 1px solid var(--win-shadow);
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      outline: none;
+      border-top-left-radius: 3px;
+      border-top-right-radius: 3px;
+      margin-bottom: -1px;
+    }
+
+    .db-tab-btn.active {
+      background-color: var(--win-bg);
+      border-bottom: 1px solid var(--win-bg);
+      font-weight: bold;
+      z-index: 2;
+      box-shadow: inset 1px 1px 0px var(--win-highlight);
+    }
+
+    .win-body {
+      flex: 1;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+      background-color: var(--win-bg);
+    }
+
+    .db-tab-page {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      height: 100%;
+    }
+
+    .db-tab-page.active {
+      display: flex;
+    }
+
+    /* Table styles */
+    .db-table-container {
+      flex: 1;
+      overflow: auto;
+      background-color: #ffffff;
+    }
+
+    .db-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      text-align: left;
+    }
+
+    .db-table th {
+      position: sticky;
+      top: 0;
+      background-color: var(--win-bg);
+      border-top: 1px solid var(--win-light);
+      border-left: 1px solid var(--win-light);
+      border-right: 1px solid var(--win-dark-shadow);
+      border-bottom: 1px solid var(--win-dark-shadow);
+      box-shadow: inset 1px 1px 0px var(--win-highlight), inset -1px -1px 0px var(--win-shadow);
+      padding: 4px 6px;
+      font-weight: bold;
+      z-index: 5;
+      cursor: pointer;
+    }
+
+    .db-table td {
+      padding: 5px 6px;
+      border-right: 1px solid #e0e0e0;
+      border-bottom: 1px solid #e0e0e0;
+      vertical-align: middle;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .db-table tr:hover {
+      background-color: #f5f5f5;
+    }
+
+    .badge-status {
+      display: inline-block;
+      padding: 2px 6px;
+      font-family: monospace;
+      font-size: 10px;
+      font-weight: bold;
+      border-radius: 2px;
+    }
+
+    .status-active { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .status-suspended { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .status-inactive { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
+    .status-disbarred { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .fieldset-box {
+      border: 1px solid var(--win-shadow);
+      box-shadow: 1px 1px 0px var(--win-light);
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .fieldset-box legend {
+      padding: 0 4px;
+      font-weight: bold;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      font-weight: bold;
+    }
+
+    /* Bar Exam Card Styling */
+    .exam-category-header {
+      background-color: #000080;
+      color: #ffffff;
+      padding: 4px 8px;
+      font-weight: bold;
+      font-size: 11px;
+      margin-top: 10px;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .exam-question-card {
+      background: #ffffff;
+      border: 1px solid var(--win-shadow);
+      box-shadow: inset 1px 1px 0px var(--win-dark-shadow);
+      padding: 10px 12px;
+      margin-bottom: 14px;
+    }
+
+    .exam-question-title {
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #000080;
+    }
+
+    .exam-scenario {
+      font-style: italic;
+      margin-bottom: 8px;
+      color: #333333;
+      line-height: 15px;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .exam-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .exam-option-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 15px;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .win-statusbar {
+      height: 20px;
+      margin: 0 2px 2px 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: #333333;
+    }
+
+    .win-statusbar-cell {
+      padding: 1px 6px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Dynamic Win2000 System Modal Dialog */
+    .system-dialog {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      background-color: var(--win-bg);
+      z-index: 10000;
+      box-shadow: 3px 3px 12px rgba(0,0,0,0.7);
+      display: none;
+      flex-direction: column;
+    }
+
+    .dialog-content-row {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+    }
+
+    .dialog-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 0 14px 14px 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="desktop">
+    <div class="db-window outset-bevel">
+      <!-- Titlebar -->
+      <div class="win-titlebar">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span>[BAR]</span>
+          <span>Mayflower State Bar Directory Workstation</span>
+        </div>
+      </div>
+
+      <!-- Menu bar -->
+      <div class="win-menubar">
+        <div class="win-menu-item"><span>F</span>ile</div>
+        <div class="win-menu-item"><span>E</span>dit</div>
+        <div class="win-menu-item"><span>V</span>iew</div>
+        <div class="win-menu-item"><span>H</span>elp</div>
+      </div>
+
+      <!-- Tab header -->
+      <div class="db-tabs-header">
+        <button class="db-tab-btn active" id="tab-btn-roster" onclick="switchTab('roster')">Bar Roster</button>
+        <button class="db-tab-btn" id="tab-btn-exam" onclick="switchTab('exam')">Bar Exam</button>
+        <button class="db-tab-btn" id="tab-btn-transfer" onclick="switchTab('transfer')">Bar Transfer</button>
+      </div>
+
+      <!-- Body -->
+      <div class="win-body">
+        
+        <!-- TAB 1: BAR ROSTER -->
+        <div id="tab-page-roster" class="db-tab-page active">
+          <div class="toolbar-row">
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span>Search Attorney Filter:</span>
+              <input type="text" id="roster-search" class="win-input" placeholder="Search name, 10-digit SBN, status..." onkeyup="filterRoster()" style="width: 220px;">
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button class="win-button" onclick="renderRosterTable()">Refresh Table</button>
+              <button class="win-button" onclick="exportRosterCSV()">Export CSV</button>
+            </div>
+          </div>
+
+          <div class="db-table-container inset-bevel">
+            <table class="db-table">
+              <thead>
+                <tr>
+                  <th onclick="sortRoster('name')">Roblox Username ▲</th>
+                  <th onclick="sortRoster('sbn')">10-Digit Bar License Number</th>
+                  <th onclick="sortRoster('status')">Membership Class / Status</th>
+                  <th onclick="sortRoster('date')">Registry Date</th>
+                </tr>
+              </thead>
+              <tbody id="roster-tbody">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 2: BAR EXAMINATION PORTAL -->
+        <div id="tab-page-exam" class="db-tab-page">
+          <div class="fieldset-box" style="background: #c0c0c0; margin-bottom: 8px;">
+            <legend>State Bar of Mayflower - Official State Bar Examination</legend>
+            <p style="margin-bottom: 8px; color: #222; font-size: 11px;">
+              Welcome to the Official Mayflower State Bar Examination Paper. Complete all 10 questions across 5 statutory categories. Upon submission, your paper will be graded and logged into the Central Database for Executive Review.
+            </p>
+            <div style="display: flex; gap: 12px; align-items: center; background: #ffffff; padding: 6px 10px; border: 1px solid #808080;">
+              <label for="exam-candidate-roblox"><strong>Candidate Roblox Username:</strong></label>
+              <input type="text" id="exam-candidate-roblox" class="win-input" placeholder="Enter Roblox Username..." style="width: 180px;">
+
+              <label for="exam-candidate-discord"><strong>Discord Username:</strong></label>
+              <input type="text" id="exam-candidate-discord" class="win-input" placeholder="Enter Discord Username..." style="width: 180px;">
+
+              <button class="win-button" style="font-weight: bold; margin-left: auto;" onclick="resetExamAnswers()">Reset Answers</button>
+            </div>
+          </div>
+
+          <div class="db-table-container inset-bevel" style="padding: 10px; background: #f0f0f0;" id="exam-questions-container">
+            <!-- Questions rendered via JavaScript -->
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px;">
+            <button class="win-button" style="font-weight: bold; padding: 4px 20px; font-size: 11px;" onclick="submitBarExam()">[ Submit Examination Paper ]</button>
+          </div>
+        </div>
+
+        <!-- TAB 3: BAR TRANSFER APPLICATION FORM -->
+        <div id="tab-page-transfer" class="db-tab-page">
+          <div class="fieldset-box" style="max-width: 600px; margin: 10px auto; background: #c0c0c0;">
+            <legend>Reciprocal Bar Transfer Application Form</legend>
+            <p style="margin-bottom: 14px; color: #333333; font-size: 11px;">
+              Licensed attorneys from recognized reciprocal jurisdictions may submit an application for Mayflower State Bar admission. Submissions are sent directly to the Central Database for Executive review.
+            </p>
+
+            <div class="form-group">
+              <label for="transfer-roblox">Roblox Username:</label>
+              <input type="text" id="transfer-roblox" class="win-input" placeholder="e.g. MayflowerAttorney">
+            </div>
+
+            <div class="form-group">
+              <label for="transfer-discord">Discord Username:</label>
+              <input type="text" id="transfer-discord" class="win-input" placeholder="e.g. lawyer#0001">
+            </div>
+
+            <div class="form-group">
+              <label for="transfer-state-from">State Transferring From:</label>
+              <input type="text" id="transfer-state-from" class="win-input" placeholder="e.g. State of Firestone Bar / Superior Court">
+            </div>
+
+            <div class="form-group">
+              <label for="transfer-evidence">Evidence of Certification:</label>
+              <textarea id="transfer-evidence" class="win-input" rows="4" placeholder="Paste link or text proof of active bar certification (e.g. certificate link, bar roster serial number)..." style="resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+              <button class="win-button" style="font-weight: bold; width: 140px;" onclick="submitBarTransfer()">Submit Application</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Statusbar -->
+      <div class="win-statusbar">
+        <div class="win-statusbar-cell inset-bevel" id="roster-status-count" style="flex: 2;">Total Records: 4 Active Attorneys</div>
+        <div class="win-statusbar-cell inset-bevel" style="flex: 1;">Database Link: ONLINE</div>
+        <div class="win-statusbar-cell inset-bevel" style="width: 120px;">5 M.S.C. 1 § 1105</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Win2000 Notification Modal Dialog -->
+  <div id="system-dialog" class="system-dialog outset-bevel">
+    <div class="win-titlebar">
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span>[!]</span>
+        <span id="dialog-title">System Notice</span>
+      </div>
+      <button class="win-button" style="padding:0 4px; height:14px; min-height:14px; font-size:9px;" onclick="closeDialog()">X</button>
+    </div>
+    <div class="dialog-content-row">
+      <svg width="36" height="36" viewBox="0 0 32 32" style="flex-shrink:0;">
+        <polygon points="16,3 30,28 2,28" fill="#c0c0c0" stroke="#000000" stroke-width="2"/>
+        <line x1="16" y1="12" x2="16" y2="20" stroke="#000000" stroke-width="2.5"/>
+        <circle cx="16" cy="24" r="1.5" fill="#000000"/>
+      </svg>
+      <div id="dialog-message-body" style="font-size: 11px; line-height: 16px; user-select: text; -webkit-user-select: text;">
+        <!-- Injected Message -->
+      </div>
+    </div>
+    <div class="dialog-buttons">
+      <button class="win-button" style="min-width: 75px; font-weight: bold;" onclick="closeDialog()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       OFFICIAL MAYFLOWER STATE BAR EXAMINATION DATA (10 QUESTIONS)
+       ========================================================================== */
+    const examQuestions = [
+      // CATEGORY 1: CONSTITUTIONAL LAW & STATE STRUCTURE
+      {
+        id: 1,
+        category: "CATEGORY 1: CONSTITUTIONAL LAW & STATE STRUCTURE",
+        title: "Question 1: The Right to Pre-Trial Release",
+        scenario: "Scenario: A defendant is arrested in Lander City and charged with eight (8) separate active-status felony counts of a highly violent nature, including Assault with a Deadly Weapon. The prosecution immediately files a Motion for Pre-Trial Detention, demanding the defendant be held without bail pending trial. They argue that the defendant represents a severe flight risk and a threat to public safety, but they do not charge the defendant with Homicide, Treason, Criminal Anarchy, or Espionage.\n\nHow must the District Court rule on the prosecution's motion?",
+        options: {
+          A: "A) Grant the motion; the court has inherent discretion to deny bail for multiple violent felonies.",
+          B: "B) Deny the motion; the defendant possesses an absolute constitutional right to bail for these offenses.",
+          C: "C) Grant the motion, but only if the National Guard is currently activated by the Governor.",
+          D: "D) Deny the motion, but only if the defendant agrees to waive their right to a speedy trial."
+        },
+        correct: "B",
+        citation: "Article I, Section 5 of the Mayflower Constitution & 5 M.S.C. 1 § 4202"
+      },
+      {
+        id: 2,
+        category: "CATEGORY 1: CONSTITUTIONAL LAW & STATE STRUCTURE",
+        title: "Question 2: National Guard Peacetime Jurisdiction",
+        scenario: "Scenario: During peacetime, a civilian is stopped, searched, and detained by an ordinary National Guard soldier at a regional hospital parking lot, which is located several miles away from any military base. The soldier is not a member of the Military Police and possesses no warrant. The state seeks to prosecute the civilian for resisting this detention, arguing the Guard acted under its broad authority as a state defense force.\n\nWas the military detention of the civilian lawful?",
+        options: {
+          A: "A) Yes; the National Guard has statewide police authority during peacetime under Article VIII of the Constitution.",
+          B: "B) Yes, because military personnel are automatically considered peace officers while in uniform.",
+          C: "C) No; ordinary guardsmen may only detain civilians within the direct vicinity of a Military Installation.",
+          D: "D) No, because the National Guard is completely forbidden from executing detentions under any circumstances."
+        },
+        correct: "C",
+        citation: "Article VII, Section 2 of the Mayflower Constitution & 3 M.S.C. 4 § 1202"
+      },
+
+      // CATEGORY 2: CRIMINAL LAW & PROCEDURE
+      {
+        id: 3,
+        category: "CATEGORY 2: CRIMINAL LAW & PROCEDURE",
+        title: "Question 3: Unauthorized Practice of Law (UPL) with Compensated Representation",
+        scenario: "Scenario: An individual who is not certified by the State Bar of Mayflower represents a defendant in a criminal proceeding in the Rockford District Court. The unlicensed individual charges the defendant a fee of $10,000 for their representation. The Department of Justice discovers the arrangement and prosecutes the individual under the Pearson Specter Litt Act.\n\nWhat is the maximum criminal penalty the individual faces upon conviction?",
+        options: {
+          A: "A) Up to 60 minutes in prison, a citation fine of $45,000, or both.",
+          B: "B) Up to 120 minutes in prison, a citation fine of up to $60,000 (or four times the amount charged, whichever is greater), or both.",
+          C: "C) Administrative disbarment and a permanent ban from applying to the State Bar.",
+          D: "D) A civil citation of $10,000 with no potential prison sentence."
+        },
+        correct: "B",
+        citation: "4 M.S.C. 6 § 7101(b) (Pearson Specter Litt Act)"
+      },
+      {
+        id: 4,
+        category: "CATEGORY 2: CRIMINAL LAW & PROCEDURE",
+        title: "Question 4: Criminal Trial Sentencing Multipliers",
+        scenario: "Scenario: A defendant is charged with the active-status misdemeanor of Evasion under 1 M.S.C. § 1307. The standard active-status prison sentence for this misdemeanor is exactly 15 minutes. Rather than accepting a plea deal, the defendant exercises their right to a jury trial. The jury finds the defendant guilty.\n\nWhat is the maximum incarceration time the sentencing judge can legally award for this conviction?",
+        options: {
+          A: "A) 15 minutes (the standard statutory sentence).",
+          B: "B) 195 minutes (3.25 hours).",
+          C: "C) 225 minutes (3.75 hours).",
+          D: "D) 270 minutes (4.5 hours)."
+        },
+        correct: "B",
+        citation: "5 M.S.C. 1 § 6301.1(b) (Mayflower Criminal Justice Act 13x Misdemeanor Multiplier)"
+      },
+
+      // CATEGORY 3: CIVIL LIABILITIES & TORTS
+      {
+        id: 5,
+        category: "CATEGORY 3: CIVIL LIABILITIES & TORTS",
+        title: "Question 5: Mayflower Tort Claims Act Damage Caps",
+        scenario: "Scenario: A plaintiff files a civil action under the Mayflower Tort Claims Act against a private citizen for the tort of Battery. The plaintiff proves by a preponderance of the evidence that the defendant brought about an unconsented, harmful contact with their person. The jury finds the defendant liable and seeks to award punitive damages.\n\nWhat is the maximum statutory cap on punitive damages that can be awarded for this specific tort, assuming no aggravating patterns of repeated misconduct are proven?",
+        options: {
+          A: "A) $150,000",
+          B: "B) $200,000",
+          C: "C) $230,000",
+          D: "D) $300,000"
+        },
+        correct: "C",
+        citation: "5 M.S.C. 1 § 3101.2"
+      },
+      {
+        id: 6,
+        category: "CATEGORY 3: CIVIL LIABILITIES & TORTS",
+        title: "Question 6: Government Tort Claims Procedure",
+        scenario: "Scenario: An individual's vehicle is severely damaged by a Department of Transportation maintenance truck due to the driver's gross negligence. The individual immediately files a civil lawsuit for money damages in the District Court. The Solicitor General moves to dismiss the lawsuit, pointing out that the plaintiff did not submit the claim to the Department of Justice first.\n\nHow must the court rule on the Solicitor General's motion?",
+        options: {
+          A: "A) Deny the motion; citizens may sue the state directly in court for active torts.",
+          B: "B) Dismiss the lawsuit; presenting the claim to the DOJ and receiving a final written denial is an absolute statutory prerequisite to filing a lawsuit.",
+          C: "C) Deny the motion, but order the plaintiff to complete 10 hours of mediation before proceeding to trial.",
+          D: "D) Dismiss the lawsuit, but only if the Solicitor General agrees to pay the plaintiff's court costs."
+        },
+        correct: "B",
+        citation: "5 M.S.C. 1 § 3204.1"
+      },
+
+      // CATEGORY 4: PUBLIC EMPLOYMENT & ADMINISTRATIVE LAW
+      {
+        id: 7,
+        category: "CATEGORY 4: PUBLIC EMPLOYMENT & ADMINISTRATIVE LAW",
+        title: "Question 7: The 'At-Will Junior' Dismissal Mandate",
+        scenario: "Scenario: A non-conditional (full-time) employee of the Mayflower State Police is abruptly terminated by command staff. The supervisor tells the employee: 'We are an at-will state, so we do not need to give you a reason or a review. You're fired.' The employee challenges the discharge in court, proving they were never given a performance evaluation or a chance to correct deficiencies.\n\nIs the department's 'at-will' discharge of the employee legally valid?",
+        options: {
+          A: "A) Yes; command staff in all departments retain absolute, unreviewable power to discharge any employee at any time under 4 M.S.C. 7 § 4101.",
+          B: "B) Yes, provided the department files a budget statement showing a temporary deficit.",
+          C: "C) No; traditional at-will termination is inactive, and the department must find cause in a performance review and afford due process.",
+          D: "D) No, but only if the employee has been employed for less than one month."
+        },
+        correct: "C",
+        citation: "4 M.S.C. 7 § 4104 (At-Will Junior Act)"
+      },
+      {
+        id: 8,
+        category: "CATEGORY 4: PUBLIC EMPLOYMENT & ADMINISTRATIVE LAW",
+        title: "Question 8: Dual Office Holding (The Sado-Bear Act)",
+        scenario: "Scenario: A sitting member of the Mayflower Senate runs for and successfully wins election to the Office of the Sheriff of Clark County. Upon the certification of the Sheriff election results, the newly elected Sheriff attempts to continue serving as a State Senator, claiming they can fulfill the duties of both offices concurrently.\n\nWhat is the legal status of the individual's legislative and law enforcement offices?",
+        options: {
+          A: "A) They may hold both offices concurrently upon receiving a majority confirmation vote of the Senate.",
+          B: "B) They are deemed to have automatically vacated their Senate seat the moment they assumed the duties of the Sheriff's Office.",
+          C: "C) The Sheriff election is declared void as a matter of law, and they must remain a Senator.",
+          D: "D) The Governor must select which of the two offices the individual is permitted to retain."
+        },
+        correct: "B",
+        citation: "4 M.S.C. 7 § 21002 (Sado-Bear Act)"
+      },
+
+      // CATEGORY 5: VEHICLE, TRANSPORTATION & ELECTORAL CODES
+      {
+        id: 9,
+        category: "CATEGORY 5: VEHICLE, TRANSPORTATION & ELECTORAL CODES",
+        title: "Question 9: Checkpoint Operational Limits",
+        scenario: "Scenario: The Mayflower State Police establishes a traffic checkpoint on a state highway to inspect vehicle registrations. A driver is stopped at the checkpoint. The officers have no reasonable suspicion or probable cause regarding any crime committed by this driver. The officers keep the driver detained at the checkpoint for nine (9) minutes while slowly verifying their driver's license.\n\nIs the duration of this checkpoint detention legally permissible?",
+        options: {
+          A: "A) Yes; checkpoints are governed by the Police Detainment Act, which allows up to 12 minutes for any standard detention.",
+          B: "B) Yes, because checkpoint detentions are completely exempt from statutory time limits.",
+          C: "C) No; checkpoint stops are presumed unreasonable if they last longer than five (5) minutes without independent reasonable suspicion or probable cause.",
+          D: "D) No, because checkpoints can only be established on municipal roads, not state highways."
+        },
+        correct: "C",
+        citation: "6 M.S.C. 1 § 2203 (Mayflower Checkpoint Act)"
+      },
+      {
+        id: 10,
+        category: "CATEGORY 5: VEHICLE, TRANSPORTATION & ELECTORAL CODES",
+        title: "Question 10: Electoral Integrity and Multiple Ballots",
+        scenario: "Scenario: During a highly contested state election, a registered voter attempts to maximize their candidate's chances by casting two separate ballots under their own registered name at different polling stations. The voter is caught by the Mayflower Electoral Commission.\n\nWhat class of crime has the voter committed under Mayflower law?",
+        options: {
+          A: "A) Infraction; carrying a standard fine of $150.",
+          B: "B) Misdemeanor; carrying a standard sentence of 5 minutes in jail.",
+          C: "C) Felony; carrying a standard sentence of a felony class conviction.",
+          D: "D) None; casting multiple ballots is an administrative voting error, not a criminal offense."
+        },
+        correct: "C",
+        citation: "12 M.S.C. 2 § 2205 & § 2210 (Mayflower Electoral Code)"
+      }
+    ];
+
+    /* ==========================================================================
+       STORAGE KEYS & DEFAULTS
+       ========================================================================== */
+    const STORAGE_KEY_ROSTER = 'mayflower_bar_roster';
+    const STORAGE_KEY_APPS = 'mayflower_bar_applications';
+
+    const defaultRosterSeed = [
+      { id: 1, name: "tylrzo, Esq.", sbn: "1019354001", status: "Active", date: "10/14/2024" },
+      { id: 2, name: "ThatUniversal", sbn: "1019517002", status: "Active", date: "11/02/2024" },
+      { id: 3, name: "Dr. 40QH Goldstein", sbn: "1019506003", status: "Active", date: "11/04/2024" },
+      { id: 4, name: "Detachment_Result", sbn: "1019501004", status: "Active", date: "11/18/2024" }
+    ];
+
+    function getRosterData() {
+      const data = localStorage.getItem(STORAGE_KEY_ROSTER);
+      if (!data) {
+        localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(defaultRosterSeed));
+        return defaultRosterSeed;
+      }
+      return JSON.parse(data);
+    }
+
+    let sortColumn = 'name';
+    let sortAsc = true;
+
+    /* ==========================================================================
+       RENDER BAR EXAM QUESTIONS
+       ========================================================================== */
+    function renderExamQuestions() {
+      const container = document.getElementById('exam-questions-container');
+      if (!container) return;
+
+      container.innerHTML = '';
+      let currentCategory = '';
+
+      examQuestions.forEach((q, idx) => {
+        if (q.category !== currentCategory) {
+          currentCategory = q.category;
+          const catHeader = document.createElement('div');
+          catHeader.className = 'exam-category-header';
+          catHeader.innerText = currentCategory;
+          container.appendChild(catHeader);
+        }
+
+        const card = document.createElement('div');
+        card.className = 'exam-question-card';
+
+        card.innerHTML = `
+          <div class="exam-question-title">${escapeHTML(q.title)}</div>
+          <div class="exam-scenario">${escapeHTML(q.scenario).replace(/\n/g, '<br>')}</div>
+          <div class="exam-options">
+            <label class="exam-option-label">
+              <input type="radio" name="q_${q.id}" value="A">
+              <span>${escapeHTML(q.options.A)}</span>
+            </label>
+            <label class="exam-option-label">
+              <input type="radio" name="q_${q.id}" value="B">
+              <span>${escapeHTML(q.options.B)}</span>
+            </label>
+            <label class="exam-option-label">
+              <input type="radio" name="q_${q.id}" value="C">
+              <span>${escapeHTML(q.options.C)}</span>
+            </label>
+            <label class="exam-option-label">
+              <input type="radio" name="q_${q.id}" value="D">
+              <span>${escapeHTML(q.options.D)}</span>
+            </label>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function resetExamAnswers() {
+      examQuestions.forEach(q => {
+        const radios = document.getElementsByName(`q_${q.id}`);
+        radios.forEach(r => r.checked = false);
+      });
+    }
+
+    function submitBarExam() {
+      const robloxUser = document.getElementById('exam-candidate-roblox').value.trim();
+      const discordUser = document.getElementById('exam-candidate-discord').value.trim();
+
+      if (!robloxUser) {
+        openSystemAlert("Candidate Required", "Please enter your Roblox Username before submitting the Bar Examination paper.");
+        return;
+      }
+
+      let score = 0;
+      let unanswered = 0;
+      let breakdown = [];
+
+      examQuestions.forEach(q => {
+        const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
+        if (!selected) {
+          unanswered++;
+          breakdown.push(`Q${q.id}: Unanswered (Correct: ${q.correct})`);
+        } else if (selected.value === q.correct) {
+          score++;
+          breakdown.push(`Q${q.id}: Correct (${q.correct})`);
+        } else {
+          breakdown.push(`Q${q.id}: Incorrect (Selected ${selected.value}, Correct: ${q.correct})`);
+        }
+      });
+
+      if (unanswered > 0) {
+        if (!confirm(`Warning: You have ${unanswered} unanswered question(s). Are you sure you want to submit your Bar Exam paper now?`)) {
+          return;
+        }
+      }
+
+      const total = examQuestions.length;
+      const percentage = Math.round((score / total) * 100);
+      const passed = percentage >= 70; // 70% pass threshold
+
+      const appsData = localStorage.getItem(STORAGE_KEY_APPS);
+      const appsList = appsData ? JSON.parse(appsData) : [];
+
+      const today = new Date();
+      const dateStr = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
+
+      const examResultRecord = {
+        id: Date.now(),
+        type: "Bar Exam Result",
+        robloxUser: robloxUser,
+        discordUser: discordUser || "N/A",
+        stateFrom: `Bar Exam Score: ${score}/${total} (${percentage}%) - ${passed ? 'PASSED' : 'FAILED'}`,
+        evidence: `Official 10-Question State Bar Examination. Result: ${score}/${total} (${percentage}%). Details: ${breakdown.join(' | ')}`,
+        status: "Pending Review",
+        score: `${percentage}%`,
+        passed: passed,
+        date: dateStr
+      };
+
+      appsList.push(examResultRecord);
+      localStorage.setItem(STORAGE_KEY_APPS, JSON.stringify(appsList));
+      window.dispatchEvent(new Event('storage'));
+
+      openSystemAlert(
+        "Examination Submitted & Logged",
+        `SUCCESS: Bar Examination for candidate "${escapeHTML(robloxUser)}" completed.\n\nScore: ${score} / ${total} (${percentage}%)\nResult: ${passed ? 'PASSED (70%+)' : 'FAILED'}\n\nYour exam result has been logged into the Central Database for Executive Review.`
+      );
+    }
+
+    /* ==========================================================================
+       TAB SWITCHING & DIALOGS
+       ========================================================================== */
+    function switchTab(tabName) {
+      document.querySelectorAll('.db-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.db-tab-page').forEach(page => page.classList.remove('active'));
+
+      document.getElementById(`tab-btn-${tabName}`).classList.add('active');
+      document.getElementById(`tab-page-${tabName}`).classList.add('active');
+
+      if (tabName === 'roster') {
+        renderRosterTable();
+      }
+    }
+
+    function openSystemAlert(title, message) {
+      document.getElementById('dialog-title').innerText = title;
+      document.getElementById('dialog-message-body').innerText = message;
+      document.getElementById('system-dialog').style.display = 'flex';
+    }
+
+    function closeDialog() {
+      document.getElementById('system-dialog').style.display = 'none';
+    }
+
+    /* ==========================================================================
+       ROSTER TABLE & BAR TRANSFERS
+       ========================================================================== */
+    function renderRosterTable(filteredData = null) {
+      const tbody = document.getElementById('roster-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      const list = filteredData || getRosterData();
+
+      list.forEach((item) => {
+        const tr = document.createElement('tr');
+        
+        let badgeClass = 'status-active';
+        if (item.status === 'Suspended') badgeClass = 'status-suspended';
+        if (item.status === 'Inactive') badgeClass = 'status-inactive';
+        if (item.status === 'Disbarred') badgeClass = 'status-disbarred';
+
+        tr.innerHTML = `
+          <td style="font-weight: bold;">${escapeHTML(item.name)}</td>
+          <td style="font-family: monospace; font-size: 11px;">${item.sbn}</td>
+          <td><span class="badge-status ${badgeClass}">${escapeHTML(item.status)}</span></td>
+          <td>${item.date}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const totalCount = getRosterData().length;
+      document.getElementById('roster-status-count').innerText = `Total Records: ${totalCount} Registered Attorney${totalCount === 1 ? '' : 's'}`;
+    }
+
+    function filterRoster() {
+      const query = document.getElementById('roster-search').value.toLowerCase();
+      const roster = getRosterData();
+      const filtered = roster.filter(attorney => 
+        attorney.name.toLowerCase().includes(query) ||
+        attorney.sbn.toString().includes(query) ||
+        attorney.status.toLowerCase().includes(query) ||
+        attorney.date.includes(query)
+      );
+      renderRosterTable(filtered);
+    }
+
+    function sortRoster(column) {
+      const roster = getRosterData();
+      if (sortColumn === column) {
+        sortAsc = !sortAsc;
+      } else {
+        sortColumn = column;
+        sortAsc = true;
+      }
+
+      roster.sort((a, b) => {
+        let valA = a[column];
+        let valB = b[column];
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        if (valA < valB) return sortAsc ? -1 : 1;
+        if (valA > valB) return sortAsc ? 1 : -1;
+        return 0;
+      });
+
+      renderRosterTable(roster);
+    }
+
+    function exportRosterCSV() {
+      let csv = "Roblox Username,10-Digit Bar License,Membership Class,Registry Date\n";
+      const roster = getRosterData();
+      roster.forEach(row => {
+        csv += `"${row.name.replace(/"/g, '""')}",${row.sbn},"${row.status}","${row.date}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Mayflower_Bar_Roster_${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function submitBarTransfer() {
+      const robloxUser = document.getElementById('transfer-roblox').value.trim();
+      const discordUser = document.getElementById('transfer-discord').value.trim();
+      const stateFrom = document.getElementById('transfer-state-from').value.trim();
+      const evidence = document.getElementById('transfer-evidence').value.trim();
+
+      if (!robloxUser || !stateFrom || !evidence) {
+        openSystemAlert("Form Incomplete", "Please complete all required fields (Roblox Username, State Transferring From, and Evidence of Certification).");
+        return;
+      }
+
+      const appsData = localStorage.getItem(STORAGE_KEY_APPS);
+      const appsList = appsData ? JSON.parse(appsData) : [];
+
+      const today = new Date();
+      const dateStr = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
+
+      appsList.push({
+        id: Date.now(),
+        type: "Bar Transfer",
+        robloxUser: robloxUser,
+        discordUser: discordUser || "N/A",
+        stateFrom: stateFrom,
+        evidence: evidence,
+        status: "Pending Review",
+        date: dateStr
+      });
+
+      localStorage.setItem(STORAGE_KEY_APPS, JSON.stringify(appsList));
+      window.dispatchEvent(new Event('storage'));
+
+      // Clear inputs
+      document.getElementById('transfer-roblox').value = '';
+      document.getElementById('transfer-discord').value = '';
+      document.getElementById('transfer-state-from').value = '';
+      document.getElementById('transfer-evidence').value = '';
+
+      openSystemAlert(
+        "Application Logged",
+        `SUCCESS: Reciprocal Bar Transfer Application for "${robloxUser}" has been logged into the Central State Bar Database for Executive Director Review.`
+      );
+    }
+
+    function escapeHTML(str) {
+      return String(str || '').replace(/[&<>"']/g, match => {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[match];
+      });
+    }
+
+    // Auto-update table when storage changes (sync with /database.html)
+    window.addEventListener('storage', () => {
+      renderRosterTable();
+    });
+
+    // Initialize Page
+    document.addEventListener('DOMContentLoaded', () => {
+      getRosterData();
+      renderRosterTable();
+      renderExamQuestions();
+    });
+  </script>
+</body>
+</html>
