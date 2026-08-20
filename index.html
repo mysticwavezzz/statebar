@@ -998,7 +998,7 @@
     }
 
     /* ==========================================================================
-       ANTI-SCREENSHOT & COPY PROTECTION SHIELD (CAPTURE PHASE)
+       ANTI-SCREENSHOT & COPY PROTECTION SHIELD
        ========================================================================== */
     function triggerScreenshotShield() {
       if (isExamActive) {
@@ -1012,35 +1012,36 @@
       document.getElementById('screenshot-shield').style.display = 'none';
     }
 
-    // Intercept ANY keydown at root capture phase during active testing
+    // Intercept explicit screenshot and print key events only
     window.addEventListener('keydown', (e) => {
       if (!isExamActive) return;
 
-      // Instantly apply heavy blur + opacity zero before OS framebuffer capture
-      triggerScreenshotShield();
-
-      if (e.key === 'PrintScreen' || e.keyCode === 44 || e.ctrlKey || e.metaKey || e.key === 'F12') {
+      // PrintScreen key
+      if (e.key === 'PrintScreen' || e.keyCode === 44) {
         e.preventDefault();
+        triggerScreenshotShield();
       }
-    }, true);
 
-    window.addEventListener('keyup', (e) => {
-      if (isExamActive) {
+      // Windows + Shift + S (Snipping Tool) or Mac Cmd + Shift + 3 / 4 / 5
+      if ((e.shiftKey && (e.key === 'S' || e.key === 's')) ||
+          ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5'))) {
+        if (e.ctrlKey || e.metaKey || e.winKey || e.altKey) {
+          e.preventDefault();
+          triggerScreenshotShield();
+        }
+      }
+
+      // Print shortcut (Ctrl + P / Cmd + P)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
         triggerScreenshotShield();
       }
     }, true);
 
-    // Detect focus loss, tab switch, or cursor leaving window during active exam
-    window.addEventListener('blur', () => {
-      if (isExamActive) triggerScreenshotShield();
-    }, true);
-
-    document.addEventListener('visibilitychange', () => {
-      if (isExamActive && document.hidden) triggerScreenshotShield();
-    }, true);
-
-    document.addEventListener('mouseleave', () => {
-      if (isExamActive) triggerScreenshotShield();
+    window.addEventListener('keyup', (e) => {
+      if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) {
+        triggerScreenshotShield();
+      }
     }, true);
 
     /* ==========================================================================
