@@ -23,6 +23,8 @@ function setDiscordClient(client) {
   discordClientRef = client;
 }
 
+const { validateRobloxUsername } = require('./src/utils/roblox');
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -33,14 +35,20 @@ app.get('/database.html', (req, res) => {
 
 // API Endpoint to send Bar Certification Log embed to Discord Channel 1539839511544991785
 app.post('/api/certify-bar', async (req, res) => {
-  const { robloxUser, score, robloxId } = req.body;
+  const { robloxUser, score } = req.body;
 
   if (!robloxUser) {
     return res.status(400).json({ error: 'robloxUser is required' });
   }
 
   const scoreStr = score || '79.11%';
-  const profileId = robloxId || '8223519700';
+
+  // Dynamically resolve Roblox User ID from username
+  const robloxRes = await validateRobloxUsername(robloxUser).catch(() => ({ valid: false }));
+  const resolvedUsername = robloxRes.username || robloxUser;
+  const profileUrl = robloxRes.userId
+    ? `https://www.roblox.com/users/${robloxRes.userId}/profile`
+    : `https://www.roblox.com/users/profile?username=${encodeURIComponent(robloxUser)}`;
 
   if (discordClientRef) {
     try {
@@ -50,12 +58,12 @@ app.post('/api/certify-bar', async (req, res) => {
       if (channel && channel.isTextBased()) {
         const embed = new EmbedBuilder()
           .setTitle('Certification Log')
-          .setDescription(`This log hereby certifies that [${robloxUser}](https://www.roblox.com/users/${profileId}/profile) has been duly admitted to the Bar of Harrison County, passing with a score of \`\`${scoreStr}\`\`.`)
+          .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Harrison County, passing with a score of \`\`${scoreStr}\`\`.`)
           .setColor('#2E7D32');
 
         await channel.send({ embeds: [embed] });
-        console.log(`[Bar Certification Log] Posted log for ${robloxUser} to channel ${channelId}`);
-        return res.json({ success: true, message: `Certification log sent for ${robloxUser}` });
+        console.log(`[Bar Certification Log] Posted log for ${resolvedUsername} to channel ${channelId}`);
+        return res.json({ success: true, message: `Certification log sent for ${resolvedUsername}` });
       }
     } catch (err) {
       console.error('[API Certify Bar Error]:', err.message);

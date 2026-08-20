@@ -175,11 +175,17 @@ async function handleInteraction(interaction) {
         return;
       }
 
-      // F. /certify-bar user: score: roblox_id:
+      // F. /certify-bar user: score:
       if (commandName === 'certify-bar') {
+        await interaction.deferReply({ ephemeral: true });
         const username = interaction.options.getString('user', true);
         const score = interaction.options.getString('score', true);
-        const robloxId = interaction.options.getString('roblox_id', true);
+
+        const robloxRes = await validateRobloxUsername(username).catch(() => ({ valid: false }));
+        const resolvedUsername = robloxRes.username || username;
+        const profileUrl = robloxRes.userId
+          ? `https://www.roblox.com/users/${robloxRes.userId}/profile`
+          : `https://www.roblox.com/users/profile?username=${encodeURIComponent(username)}`;
 
         const logChannelId = config.stateBarCertLogChannelId;
         const logChannel = await interaction.client.channels.fetch(logChannelId).catch(() => null);
@@ -187,13 +193,13 @@ async function handleInteraction(interaction) {
         if (logChannel && logChannel.isTextBased()) {
           const embed = new EmbedBuilder()
             .setTitle('Certification Log')
-            .setDescription(`This log hereby certifies that [${username}](https://www.roblox.com/users/${robloxId}/profile) has been duly admitted to the Bar of Harrison County, passing with a score of \`\`${score}\`\`.`)
+            .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Harrison County, passing with a score of \`\`${score}\`\`.`)
             .setColor('#2E7D32');
 
           await logChannel.send({ embeds: [embed] });
-          await interaction.reply({ content: `Successfully posted certification log for ${username} to <#${logChannelId}>`, ephemeral: true });
+          await interaction.editReply({ content: `Successfully posted certification log for ${resolvedUsername} to <#${logChannelId}>` });
         } else {
-          await interaction.reply({ content: `Error: Could not fetch certification log channel (${logChannelId}).`, ephemeral: true });
+          await interaction.editReply({ content: `Error: Could not fetch certification log channel (${logChannelId}).` });
         }
         return;
       }
