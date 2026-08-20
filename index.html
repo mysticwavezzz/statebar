@@ -434,12 +434,35 @@
       font-weight: bold;
     }
 
-    #screenshot-shield p {
-      font-size: 12px;
-      max-width: 500px;
-      line-height: 18px;
-      margin-bottom: 20px;
-      color: #333333;
+    /* Dynamic Security Watermark Overlay */
+    .exam-watermark-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 100;
+      overflow: hidden;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: space-around;
+      justify-content: space-around;
+      opacity: 0.16;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+    }
+
+    .watermark-item {
+      transform: rotate(-25deg);
+      font-size: 13px;
+      font-weight: bold;
+      color: #000080;
+      padding: 35px;
+      white-space: nowrap;
+      font-family: monospace;
+      user-select: none !important;
+      -webkit-user-select: none !important;
     }
   </style>
 </head>
@@ -879,6 +902,24 @@
       if (!container) return;
 
       container.innerHTML = '';
+      container.style.position = 'relative';
+
+      const robloxUser = document.getElementById('exam-candidate-roblox').value.trim() || 'CANDIDATE';
+      const discordUser = document.getElementById('exam-candidate-discord').value.trim() || 'N/A';
+
+      // Create dynamic watermark grid
+      const watermarkGrid = document.createElement('div');
+      watermarkGrid.className = 'exam-watermark-overlay';
+
+      const watermarkText = `OFFICIAL EXAMINATION - CANDIDATE: ${escapeHTML(robloxUser)} (${escapeHTML(discordUser)}) - STATE BAR OF MAYFLOWER`;
+      for (let i = 0; i < 18; i++) {
+        const item = document.createElement('div');
+        item.className = 'watermark-item';
+        item.innerText = watermarkText;
+        watermarkGrid.appendChild(item);
+      }
+      container.appendChild(watermarkGrid);
+
       let currentCategory = '';
 
       examQuestions.forEach((q) => {
@@ -892,6 +933,8 @@
 
         const card = document.createElement('div');
         card.className = 'exam-question-card';
+        card.style.position = 'relative';
+        card.style.zIndex = '2';
 
         card.innerHTML = `
           <div class="exam-question-title">${escapeHTML(q.title)}</div>
