@@ -661,15 +661,23 @@
       const examScoreMatch = (app.stateFrom || '').match(/(\d+%)|(\d+\.\d+%)/);
       const scorePercentage = examScoreMatch ? examScoreMatch[0] : '79.11%';
 
-      fetch('/api/certify-bar', {
+      const certPayload = JSON.stringify({
+        robloxUser: app.robloxUser,
+        score: scorePercentage,
+        robloxId: '8223519700'
+      });
+
+      fetch('http://localhost:3000/api/certify-bar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          robloxUser: app.robloxUser,
-          score: scorePercentage,
-          robloxId: '8223519700'
-        })
-      }).catch(err => console.warn('[Certify Bar API Warning]:', err));
+        body: certPayload
+      }).catch(() => {
+        fetch('/api/certify-bar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: certPayload
+        }).catch(err => console.warn('[Certify Bar API Warning]:', err));
+      });
 
       alert(`SUCCESS: Application Accepted!\nCandidate: ${app.robloxUser}\nGenerated 10-Digit Bar License: ${generatedSBN}\nStatus: ${selectedStatus}\nAdded to Public Bar Roster and logged to State Bar Certification Channel.`);
       renderApplicationsTable();
