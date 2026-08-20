@@ -108,7 +108,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: #008080; /* Classic Win98 Teal */
+      background-color: #008080;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -206,7 +206,6 @@
       display: flex;
     }
 
-    /* Table styles */
     .db-table-container {
       flex: 1;
       overflow: auto;
@@ -293,7 +292,6 @@
       font-weight: bold;
     }
 
-    /* Bar Exam Card Styling */
     .exam-category-header {
       background-color: #000080;
       color: #ffffff;
@@ -311,6 +309,9 @@
       box-shadow: inset 1px 1px 0px var(--win-dark-shadow);
       padding: 10px 12px;
       margin-bottom: 14px;
+      /* Disable selection on exam questions */
+      user-select: none !important;
+      -webkit-user-select: none !important;
     }
 
     .exam-question-title {
@@ -324,8 +325,8 @@
       margin-bottom: 8px;
       color: #333333;
       line-height: 15px;
-      user-select: text;
-      -webkit-user-select: text;
+      user-select: none !important;
+      -webkit-user-select: none !important;
     }
 
     .exam-options {
@@ -342,8 +343,8 @@
       cursor: pointer;
       font-size: 11px;
       line-height: 15px;
-      user-select: text;
-      -webkit-user-select: text;
+      user-select: none !important;
+      -webkit-user-select: none !important;
     }
 
     .win-statusbar {
@@ -363,7 +364,6 @@
       align-items: center;
     }
 
-    /* Dynamic Win2000 System Modal Dialog */
     .system-dialog {
       position: absolute;
       top: 50%;
@@ -390,9 +390,52 @@
       gap: 8px;
       padding: 0 14px 14px 14px;
     }
+
+    /* Full-screen anti-screenshot & security protection shield */
+    #screenshot-shield {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #ffffff;
+      z-index: 9999999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+      color: #000000;
+    }
+
+    #screenshot-shield h1 {
+      font-size: 20px;
+      color: #721c24;
+      margin-bottom: 12px;
+      font-weight: bold;
+    }
+
+    #screenshot-shield p {
+      font-size: 12px;
+      max-width: 500px;
+      line-height: 18px;
+      margin-bottom: 20px;
+      color: #333333;
+    }
   </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
+
+  <!-- ANTI-SCREENSHOT / SECURITY BLANKET SHIELD -->
+  <div id="screenshot-shield">
+    <h1>[!] SECURITY WARNING: TEST AREA PROTECTED</h1>
+    <p>
+      Screen capture, screenshot shortcuts, window switching, printing, and copying are strictly prohibited during the active State Bar Examination.<br><br>
+      The examination paper has been hidden to preserve statutory security.
+    </p>
+    <button class="win-button" style="font-weight: bold; padding: 6px 20px;" onclick="dismissScreenshotShield()">[ Return to Active Examination ]</button>
+  </div>
 
   <div id="desktop">
     <div class="db-window outset-bevel">
@@ -454,34 +497,85 @@
 
         <!-- TAB 2: BAR EXAMINATION PORTAL -->
         <div id="tab-page-exam" class="db-tab-page">
-          <div class="fieldset-box" style="background: #c0c0c0; margin-bottom: 8px;">
-            <legend>State Bar of Mayflower - Official State Bar Examination</legend>
-            <p style="margin-bottom: 8px; color: #222; font-size: 11px;">
-              Welcome to the Official Mayflower State Bar Examination Paper. Complete all 10 questions across 5 statutory categories. Upon submission, your paper will be graded and logged into the Central Database for Executive Review.
+          
+          <!-- SUB-VIEW A: ALREADY SUBMITTED NOTICE -->
+          <div id="exam-view-submitted" class="fieldset-box" style="display: none; max-width: 600px; margin: 30px auto; background: #fff3cd; border-color: #ffeeba;">
+            <legend style="color: #856404;">[!] Examination Previously Submitted</legend>
+            <p style="font-size: 12px; line-height: 18px; color: #856404; margin-bottom: 12px;">
+              <strong>Notice:</strong> An active Bar Examination paper or application from this device/user has already been submitted and is currently logged into the Central Database under Executive Review.
             </p>
-            <div style="display: flex; gap: 12px; align-items: center; background: #ffffff; padding: 6px 10px; border: 1px solid #808080;">
-              <label for="exam-candidate-roblox"><strong>Candidate Roblox Username:</strong></label>
-              <input type="text" id="exam-candidate-roblox" class="win-input" placeholder="Enter Roblox Username..." style="width: 180px;">
+            <p style="font-size: 11px; color: #555;">
+              Duplicate examination attempts are prohibited pursuant to 5 M.S.C. 1 § 1105. If you believe this is an error, contact the State Registrar.
+            </p>
+          </div>
 
-              <label for="exam-candidate-discord"><strong>Discord Username:</strong></label>
-              <input type="text" id="exam-candidate-discord" class="win-input" placeholder="Enter Discord Username..." style="width: 180px;">
+          <!-- SUB-VIEW B: ENTER TESTING ENVIRONMENT GATE -->
+          <div id="exam-view-gate" class="fieldset-box" style="max-width: 620px; margin: 15px auto; background: #c0c0c0;">
+            <legend>State Bar of Mayflower - Official Examination Security Gate</legend>
+            <p style="margin-bottom: 12px; color: #222; font-size: 11px; line-height: 16px;">
+              You are preparing to take the Official Mayflower State Bar Examination. The paper consists of 10 statutory questions across 5 legal categories.
+            </p>
+            <div class="fieldset-box" style="background: #ffffff; margin-bottom: 14px;">
+              <legend>Candidate Identification &amp; Testing Rules</legend>
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="exam-candidate-roblox">Roblox Username (Required):</label>
+                <input type="text" id="exam-candidate-roblox" class="win-input" placeholder="Enter Roblox Username..." style="width: 260px;">
+              </div>
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="exam-candidate-discord">Discord Username:</label>
+                <input type="text" id="exam-candidate-discord" class="win-input" placeholder="Enter Discord Username..." style="width: 260px;">
+              </div>
+              <div style="font-size: 10px; color: #666; background: #f8f9fa; padding: 6px; border: 1px solid #ddd; margin-top: 6px;">
+                <strong>Security Policy:</strong> Entering the testing environment activates Anti-Screenshot Shielding, copy prohibition, and window focus tracking. Screen recording or window switching is strictly monitored.
+              </div>
+            </div>
 
-              <button class="win-button" style="font-weight: bold; margin-left: auto;" onclick="resetExamAnswers()">Reset Answers</button>
+            <div style="display: flex; justify-content: center; margin-top: 16px;">
+              <button id="btn-enter-testing-env" class="win-button" style="font-weight: bold; padding: 6px 24px; font-size: 12px; background: #d4edda; border-color: #28a745; color: #155724;" onclick="enterTestingEnvironment()">
+                [ Enter Testing Environment ]
+              </button>
             </div>
           </div>
 
-          <div class="db-table-container inset-bevel" style="padding: 10px; background: #f0f0f0;" id="exam-questions-container">
-            <!-- Questions rendered via JavaScript -->
+          <!-- SUB-VIEW C: ACTIVE QUESTIONS ENVIRONMENT -->
+          <div id="exam-view-active" style="display: none; flex-direction: column; flex: 1; height: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 6px 10px; border: 1px solid #808080; margin-bottom: 8px;">
+              <div>
+                <strong>Active Exam Session:</strong> Candidate <span id="active-candidate-label" style="font-weight: bold; color: #000080;">---</span>
+              </div>
+              <div style="font-size: 10px; color: #721c24; font-weight: bold;">
+                [!] Security Shield Active (Anti-Screenshot Enabled)
+              </div>
+              <button class="win-button" style="font-weight: bold;" onclick="resetExamAnswers()">Reset Answers</button>
+            </div>
+
+            <div class="db-table-container inset-bevel" style="padding: 10px; background: #f0f0f0;" id="exam-questions-container">
+              <!-- Questions rendered via JavaScript -->
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px;">
+              <button class="win-button" style="font-weight: bold; padding: 4px 20px; font-size: 11px; background: #d4edda;" onclick="submitBarExam()">[ Submit Examination Paper ]</button>
+            </div>
           </div>
 
-          <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px;">
-            <button class="win-button" style="font-weight: bold; padding: 4px 20px; font-size: 11px;" onclick="submitBarExam()">[ Submit Examination Paper ]</button>
-          </div>
         </div>
 
         <!-- TAB 3: BAR TRANSFER APPLICATION FORM -->
         <div id="tab-page-transfer" class="db-tab-page">
-          <div class="fieldset-box" style="max-width: 600px; margin: 10px auto; background: #c0c0c0;">
+          
+          <!-- SUB-VIEW A: ALREADY SUBMITTED TRANSFER NOTICE -->
+          <div id="transfer-view-submitted" class="fieldset-box" style="display: none; max-width: 600px; margin: 30px auto; background: #fff3cd; border-color: #ffeeba;">
+            <legend style="color: #856404;">[!] Transfer Application Previously Logged</legend>
+            <p style="font-size: 12px; line-height: 18px; color: #856404; margin-bottom: 12px;">
+              <strong>Notice:</strong> A Reciprocal Bar Transfer application from this device/user has already been submitted and is currently pending Executive Director review.
+            </p>
+            <p style="font-size: 11px; color: #555;">
+              Duplicate transfer applications are prohibited. You will be notified once the Director reviews your submission.
+            </p>
+          </div>
+
+          <!-- SUB-VIEW B: FORM -->
+          <div id="transfer-view-form" class="fieldset-box" style="max-width: 600px; margin: 10px auto; background: #c0c0c0;">
             <legend>Reciprocal Bar Transfer Application Form</legend>
             <p style="margin-bottom: 14px; color: #333333; font-size: 11px;">
               Licensed attorneys from recognized reciprocal jurisdictions may submit an application for Mayflower State Bar admission. Submissions are sent directly to the Central Database for Executive review.
@@ -508,9 +602,10 @@
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
-              <button class="win-button" style="font-weight: bold; width: 140px;" onclick="submitBarTransfer()">Submit Application</button>
+              <button id="btn-submit-transfer" class="win-button" style="font-weight: bold; width: 140px;" onclick="submitBarTransfer()">Submit Application</button>
             </div>
           </div>
+
         </div>
 
       </div>
@@ -553,7 +648,6 @@
        OFFICIAL MAYFLOWER STATE BAR EXAMINATION DATA (10 QUESTIONS)
        ========================================================================== */
     const examQuestions = [
-      // CATEGORY 1: CONSTITUTIONAL LAW & STATE STRUCTURE
       {
         id: 1,
         category: "CATEGORY 1: CONSTITUTIONAL LAW & STATE STRUCTURE",
@@ -565,8 +659,7 @@
           C: "C) Grant the motion, but only if the National Guard is currently activated by the Governor.",
           D: "D) Deny the motion, but only if the defendant agrees to waive their right to a speedy trial."
         },
-        correct: "B",
-        citation: "Article I, Section 5 of the Mayflower Constitution & 5 M.S.C. 1 § 4202"
+        correct: "B"
       },
       {
         id: 2,
@@ -579,11 +672,8 @@
           C: "C) No; ordinary guardsmen may only detain civilians within the direct vicinity of a Military Installation.",
           D: "D) No, because the National Guard is completely forbidden from executing detentions under any circumstances."
         },
-        correct: "C",
-        citation: "Article VII, Section 2 of the Mayflower Constitution & 3 M.S.C. 4 § 1202"
+        correct: "C"
       },
-
-      // CATEGORY 2: CRIMINAL LAW & PROCEDURE
       {
         id: 3,
         category: "CATEGORY 2: CRIMINAL LAW & PROCEDURE",
@@ -595,8 +685,7 @@
           C: "C) Administrative disbarment and a permanent ban from applying to the State Bar.",
           D: "D) A civil citation of $10,000 with no potential prison sentence."
         },
-        correct: "B",
-        citation: "4 M.S.C. 6 § 7101(b) (Pearson Specter Litt Act)"
+        correct: "B"
       },
       {
         id: 4,
@@ -609,11 +698,8 @@
           C: "C) 225 minutes (3.75 hours).",
           D: "D) 270 minutes (4.5 hours)."
         },
-        correct: "B",
-        citation: "5 M.S.C. 1 § 6301.1(b) (Mayflower Criminal Justice Act 13x Misdemeanor Multiplier)"
+        correct: "B"
       },
-
-      // CATEGORY 3: CIVIL LIABILITIES & TORTS
       {
         id: 5,
         category: "CATEGORY 3: CIVIL LIABILITIES & TORTS",
@@ -625,8 +711,7 @@
           C: "C) $230,000",
           D: "D) $300,000"
         },
-        correct: "C",
-        citation: "5 M.S.C. 1 § 3101.2"
+        correct: "C"
       },
       {
         id: 6,
@@ -639,11 +724,8 @@
           C: "C) Deny the motion, but order the plaintiff to complete 10 hours of mediation before proceeding to trial.",
           D: "D) Dismiss the lawsuit, but only if the Solicitor General agrees to pay the plaintiff's court costs."
         },
-        correct: "B",
-        citation: "5 M.S.C. 1 § 3204.1"
+        correct: "B"
       },
-
-      // CATEGORY 4: PUBLIC EMPLOYMENT & ADMINISTRATIVE LAW
       {
         id: 7,
         category: "CATEGORY 4: PUBLIC EMPLOYMENT & ADMINISTRATIVE LAW",
@@ -655,8 +737,7 @@
           C: "C) No; traditional at-will termination is inactive, and the department must find cause in a performance review and afford due process.",
           D: "D) No, but only if the employee has been employed for less than one month."
         },
-        correct: "C",
-        citation: "4 M.S.C. 7 § 4104 (At-Will Junior Act)"
+        correct: "C"
       },
       {
         id: 8,
@@ -669,11 +750,8 @@
           C: "C) The Sheriff election is declared void as a matter of law, and they must remain a Senator.",
           D: "D) The Governor must select which of the two offices the individual is permitted to retain."
         },
-        correct: "B",
-        citation: "4 M.S.C. 7 § 21002 (Sado-Bear Act)"
+        correct: "B"
       },
-
-      // CATEGORY 5: VEHICLE, TRANSPORTATION & ELECTORAL CODES
       {
         id: 9,
         category: "CATEGORY 5: VEHICLE, TRANSPORTATION & ELECTORAL CODES",
@@ -685,8 +763,7 @@
           C: "C) No; checkpoint stops are presumed unreasonable if they last longer than five (5) minutes without independent reasonable suspicion or probable cause.",
           D: "D) No, because checkpoints can only be established on municipal roads, not state highways."
         },
-        correct: "C",
-        citation: "6 M.S.C. 1 § 2203 (Mayflower Checkpoint Act)"
+        correct: "C"
       },
       {
         id: 10,
@@ -699,16 +776,19 @@
           C: "C) Felony; carrying a standard sentence of a felony class conviction.",
           D: "D) None; casting multiple ballots is an administrative voting error, not a criminal offense."
         },
-        correct: "C",
-        citation: "12 M.S.C. 2 § 2205 & § 2210 (Mayflower Electoral Code)"
+        correct: "C"
       }
     ];
 
     /* ==========================================================================
-       STORAGE KEYS & DEFAULTS
+       STORAGE KEYS & STATE MANAGEMENT
        ========================================================================== */
     const STORAGE_KEY_ROSTER = 'mayflower_bar_roster';
     const STORAGE_KEY_APPS = 'mayflower_bar_applications';
+    const STORAGE_KEY_USER_EXAM_SUBMITTED = 'mayflower_user_exam_submitted';
+    const STORAGE_KEY_USER_TRANSFER_SUBMITTED = 'mayflower_user_transfer_submitted';
+
+    let isExamActive = false;
 
     const defaultRosterSeed = [
       { id: 1, name: "tylrzo, Esq.", sbn: "1019354001", status: "Active", date: "10/14/2024" },
@@ -730,6 +810,50 @@
     let sortAsc = true;
 
     /* ==========================================================================
+       SUBMISSION CHECKS & DEVICE LOCKING
+       ========================================================================== */
+    function checkSubmissionStatus() {
+      // Check Exam status
+      const examSubmitted = localStorage.getItem(STORAGE_KEY_USER_EXAM_SUBMITTED) === 'true';
+      if (examSubmitted) {
+        document.getElementById('exam-view-gate').style.display = 'none';
+        document.getElementById('exam-view-active').style.display = 'none';
+        document.getElementById('exam-view-submitted').style.display = 'block';
+      }
+
+      // Check Transfer status
+      const transferSubmitted = localStorage.getItem(STORAGE_KEY_USER_TRANSFER_SUBMITTED) === 'true';
+      if (transferSubmitted) {
+        document.getElementById('transfer-view-form').style.display = 'none';
+        document.getElementById('transfer-view-submitted').style.display = 'block';
+      }
+    }
+
+    /* ==========================================================================
+       ENTER TESTING ENVIRONMENT GATE
+       ========================================================================== */
+    function enterTestingEnvironment() {
+      const robloxUser = document.getElementById('exam-candidate-roblox').value.trim();
+      if (!robloxUser) {
+        openSystemAlert("Candidate Required", "Please enter your Roblox Username before entering the Testing Environment.");
+        return;
+      }
+
+      // Lock view and reveal questions
+      document.getElementById('exam-view-gate').style.display = 'none';
+      document.getElementById('exam-view-active').style.display = 'flex';
+      document.getElementById('active-candidate-label').innerText = robloxUser;
+
+      isExamActive = true;
+      renderExamQuestions();
+
+      openSystemAlert(
+        "Testing Environment Activated",
+        `Welcome Candidate ${escapeHTML(robloxUser)}.\n\nAnti-Screenshot Shielding and copy protection are now active. Do not switch tabs or press PrintScreen during the examination.`
+      );
+    }
+
+    /* ==========================================================================
        RENDER BAR EXAM QUESTIONS
        ========================================================================== */
     function renderExamQuestions() {
@@ -739,7 +863,7 @@
       container.innerHTML = '';
       let currentCategory = '';
 
-      examQuestions.forEach((q, idx) => {
+      examQuestions.forEach((q) => {
         if (q.category !== currentCategory) {
           currentCategory = q.category;
           const catHeader = document.createElement('div');
@@ -818,7 +942,7 @@
 
       const total = examQuestions.length;
       const percentage = Math.round((score / total) * 100);
-      const passed = percentage >= 70; // 70% pass threshold
+      const passed = percentage >= 70;
 
       const appsData = localStorage.getItem(STORAGE_KEY_APPS);
       const appsList = appsData ? JSON.parse(appsData) : [];
@@ -841,13 +965,69 @@
 
       appsList.push(examResultRecord);
       localStorage.setItem(STORAGE_KEY_APPS, JSON.stringify(appsList));
+      
+      // Mark device as submitted for Exam
+      localStorage.setItem(STORAGE_KEY_USER_EXAM_SUBMITTED, 'true');
+      isExamActive = false;
+
       window.dispatchEvent(new Event('storage'));
+      checkSubmissionStatus();
 
       openSystemAlert(
         "Examination Submitted & Logged",
         `SUCCESS: Bar Examination for candidate "${escapeHTML(robloxUser)}" completed.\n\nScore: ${score} / ${total} (${percentage}%)\nResult: ${passed ? 'PASSED (70%+)' : 'FAILED'}\n\nYour exam result has been logged into the Central Database for Executive Review.`
       );
     }
+
+    /* ==========================================================================
+       ANTI-SCREENSHOT & COPY PROTECTION SHIELD
+       ========================================================================== */
+    function triggerScreenshotShield() {
+      if (isExamActive) {
+        document.getElementById('screenshot-shield').style.display = 'flex';
+      }
+    }
+
+    function dismissScreenshotShield() {
+      document.getElementById('screenshot-shield').style.display = 'none';
+    }
+
+    // Keydown listeners for PrintScreen, Ctrl+P, Ctrl+C, Ctrl+Shift+S, F12
+    window.addEventListener('keydown', (e) => {
+      if (!isExamActive) return;
+
+      // PrintScreen Key
+      if (e.key === 'PrintScreen' || e.keyCode === 44) {
+        e.preventDefault();
+        triggerScreenshotShield();
+      }
+
+      // Windows + Shift + S or Ctrl + P (Print) or Ctrl + C (Copy) or Ctrl + Shift + I / F12
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 'c' || e.key === 'C' || e.key === 'u' || e.key === 'U')) {
+        e.preventDefault();
+        triggerScreenshotShield();
+      }
+
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j'))) {
+        e.preventDefault();
+        triggerScreenshotShield();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) {
+        triggerScreenshotShield();
+      }
+    });
+
+    // Detect tab/window blur or visibility change during active exam
+    window.addEventListener('blur', () => {
+      if (isExamActive) triggerScreenshotShield();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (isExamActive && document.hidden) triggerScreenshotShield();
+    });
 
     /* ==========================================================================
        TAB SWITCHING & DIALOGS
@@ -984,13 +1164,12 @@
       });
 
       localStorage.setItem(STORAGE_KEY_APPS, JSON.stringify(appsList));
-      window.dispatchEvent(new Event('storage'));
+      
+      // Mark device as submitted for Transfer
+      localStorage.setItem(STORAGE_KEY_USER_TRANSFER_SUBMITTED, 'true');
 
-      // Clear inputs
-      document.getElementById('transfer-roblox').value = '';
-      document.getElementById('transfer-discord').value = '';
-      document.getElementById('transfer-state-from').value = '';
-      document.getElementById('transfer-evidence').value = '';
+      window.dispatchEvent(new Event('storage'));
+      checkSubmissionStatus();
 
       openSystemAlert(
         "Application Logged",
@@ -1007,13 +1186,14 @@
     // Auto-update table when storage changes (sync with /database.html)
     window.addEventListener('storage', () => {
       renderRosterTable();
+      checkSubmissionStatus();
     });
 
     // Initialize Page
     document.addEventListener('DOMContentLoaded', () => {
       getRosterData();
       renderRosterTable();
-      renderExamQuestions();
+      checkSubmissionStatus();
     });
   </script>
 </body>
