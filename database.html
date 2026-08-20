@@ -654,8 +654,8 @@
         }
       } catch (e) {}
 
-      const profileUrl = `https://www.roblox.com/users/${robloxId}/profile`;
-      const webhookUrl = localStorage.getItem('mayflower_cert_webhook_url');
+      const defaultWebhook = 'https://discord.com/api/webhooks/1539842389378736240/jqkKjh4SpwliOnYGNww-1U-ddQtyMqJo0QXUudZkI3xakuYh7Y-YZReUjsyr4B4ELeym';
+      const webhookUrl = localStorage.getItem('mayflower_cert_webhook_url') || defaultWebhook;
 
       if (webhookUrl) {
         fetch(webhookUrl, {
