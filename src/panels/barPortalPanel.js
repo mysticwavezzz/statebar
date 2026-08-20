@@ -38,7 +38,7 @@ function getBarPortalPanel(guildIconUrl) {
     new ButtonBuilder()
       .setCustomId('bar_exam_via_dms')
       .setLabel('Take Exam via DMs')
-      .setStyle(ButtonStyle.Primary)
+      .setStyle(ButtonStyle.Secondary)
   );
 
   const row2 = new ActionRowBuilder().addComponents(
