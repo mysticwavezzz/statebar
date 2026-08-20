@@ -84,7 +84,6 @@ async function handleInteraction(interaction) {
       // A. /assign user:
       if (commandName === 'assign') {
         const targetUser = interaction.options.getUser('user', true);
-        const executor = interaction.user;
 
         // Grant channel permissions if inside a case channel
         if (interaction.channel && interaction.channel.type === ChannelType.GuildText) {
@@ -98,7 +97,7 @@ async function handleInteraction(interaction) {
         const embed = new EmbedBuilder()
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Case Assigned')
-          .setDescription(`This case has been assigned to <@${targetUser.id}>\n\n**Executor:** <@${executor.id}>`)
+          .setDescription(`This case has been assigned to <@${targetUser.id}>.`)
           .setColor('#6B21A8');
 
         await interaction.reply({ embeds: [embed] });
@@ -113,19 +112,13 @@ async function handleInteraction(interaction) {
 
         const embed = new EmbedBuilder()
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
-          .setTitle('Notice of Formal Legal Appearance')
-          .setColor('#6B21A8')
-          .addFields(
-            { name: 'Applicant Attorney / Party', value: `<@${applicant.id}> (${applicant.username})`, inline: true },
-            { name: 'Appearance Role', value: partyType, inline: true },
-            { name: 'Case Reference', value: caseCodeStr, inline: true },
-            { name: 'Status', value: 'Pending Judicial Authorization', inline: false }
-          )
-          .setFooter({ text: 'State of Mayflower Judicial Branch' });
+          .setTitle('Appearance Request')
+          .setDescription(`<@${applicant.id}> (${applicant.username}) is requesting to appear as **${partyType}** on **${caseCodeStr}**`)
+          .setColor('#6B21A8');
 
         const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`appear_approve_${applicant.id}`).setLabel('Approve Appearance').setStyle(ButtonStyle.Success),
-          new ButtonBuilder().setCustomId(`appear_deny_${applicant.id}`).setLabel('Deny Appearance').setStyle(ButtonStyle.Danger)
+          new ButtonBuilder().setCustomId(`appear_approve_${applicant.id}`).setLabel('Approve').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId(`appear_deny_${applicant.id}`).setLabel('Deny').setStyle(ButtonStyle.Danger)
         );
 
         await interaction.reply({ embeds: [embed], components: [row] });
@@ -519,8 +512,15 @@ async function handleInteraction(interaction) {
           type: ChannelType.GuildText,
           parent: categoryId || undefined,
           permissionOverwrites: [
-            { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-            { id: data.applicant.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] }
+            {
+              id: guild.id,
+              allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+              deny: [PermissionFlagsBits.SendMessages]
+            },
+            {
+              id: data.applicant.id,
+              allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory]
+            }
           ]
         });
 
@@ -598,7 +598,6 @@ async function handleInteraction(interaction) {
 
         const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
           .setColor('#2E7D32')
-          .spliceFields(3, 1, { name: 'Status', value: `Approved by Hon. ${interaction.user.username}`, inline: false })
           .setFooter({ text: `Approved by Hon. ${interaction.user.username}` });
 
         await interaction.message.edit({ embeds: [origEmbed], components: [] });
@@ -610,7 +609,6 @@ async function handleInteraction(interaction) {
         await interaction.deferUpdate();
         const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
           .setColor('#C62828')
-          .spliceFields(3, 1, { name: 'Status', value: `Denied by Hon. ${interaction.user.username}`, inline: false })
           .setFooter({ text: `Denied by Hon. ${interaction.user.username}` });
 
         await interaction.message.edit({ embeds: [origEmbed], components: [] });
