@@ -1,3 +1,5 @@
-node_modules/
+node_modules
 .env
-*.log
+token.json
+client_secret*.json
+*.pdf

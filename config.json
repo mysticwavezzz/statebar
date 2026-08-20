@@ -1,0 +1,18 @@
+{
+  "firmName": "State of Mayflower District Courts & Bar Workstation",
+  "judiciaryGuildId": "1537964864872521779",
+  "judiciaryNickname": "caseFLOW",
+  "judiciaryFilingChannelId": "1537964874527936584",
+  "clerkReviewChannelId": "1538067231236161616",
+  "pendingCasesCategoryId": "1539837232494682112",
+  "archiveChannelId": "1537964876368969758",
+  "stateBarGuildId": "1539382124543742062",
+  "stateBarNickname": "barFLOW",
+  "stateBarCertLogChannelId": "1539839511544991785",
+  "colors": {
+    "navy": "#000080",
+    "primary": "#000080",
+    "success": "#2E7D32",
+    "danger": "#C62828"
+  }
+}
