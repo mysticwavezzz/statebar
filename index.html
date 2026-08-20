@@ -1292,13 +1292,18 @@
     window.addEventListener('keydown', (e) => {
       if (!isExamActive) return;
 
-      // PrintScreen key (any variation)
+      // PrintScreen / PrtScn key
       if (e.key === 'PrintScreen' || e.keyCode === 44) {
         recordScreenshotAttempt();
       }
 
-      // Windows + Shift + S (Snipping Tool) or Shift + S / Cmd + Shift + 3/4/5
-      if (e.shiftKey && (e.key === 'S' || e.key === 's')) {
+      // Windows + Shift + S (Snipping Tool) - REQUIRES BOTH Meta/Win/Ctrl AND Shift AND S
+      if (e.shiftKey && (e.key === 'S' || e.key === 's') && (e.metaKey || e.ctrlKey || e.winKey || e.altKey)) {
+        recordScreenshotAttempt();
+      }
+
+      // Mac Screenshot Shortcuts (Cmd + Shift + 3 / 4 / 5)
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5')) {
         recordScreenshotAttempt();
       }
 
