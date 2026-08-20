@@ -64,7 +64,7 @@ async function handleInteraction(interaction) {
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Case Assigned')
           .setDescription(`This case has been assigned to <@${targetUser.id}>\n\n**Executor:** <@${executor.id}>`)
-          .setColor('#000080');
+          .setColor('#5C9CE6');
 
         await interaction.reply({ embeds: [embed] });
         return;
@@ -82,7 +82,7 @@ async function handleInteraction(interaction) {
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Appearance Request')
           .setDescription(`<@${applicant.id}> (${applicant.username}) is requesting to appear as **${partyType}** on **${caseCodeStr}**`)
-          .setColor('#000080');
+          .setColor('#5C9CE6');
 
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder().setCustomId(`appear_approve_${applicant.id}_${interaction.channelId}`).setLabel('Approve').setStyle(ButtonStyle.Success),
@@ -110,7 +110,7 @@ async function handleInteraction(interaction) {
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Document Filed')
           .setDescription(`**Title:** ${title}\n\n${linksFormatted.length > 0 ? linksFormatted.join(' | ') : '*No external link provided*'}\n\n**Executor:** ${executor.username}`)
-          .setColor('#000080');
+          .setColor('#5C9CE6');
 
         await interaction.reply({ embeds: [embed] });
         return;
@@ -133,7 +133,7 @@ async function handleInteraction(interaction) {
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Judicial Ruling Issued')
           .setDescription(`**Title:** ${title}\n\n${linksFormatted.length > 0 ? linksFormatted.join(' | ') : '*No external link provided*'}\n\n**Executor:** ${executor.username}`)
-          .setColor('#000080');
+          .setColor('#5C9CE6');
 
         await interaction.reply({ embeds: [embed] });
         return;
