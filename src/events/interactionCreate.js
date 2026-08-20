@@ -429,15 +429,21 @@ async function handleInteraction(interaction) {
             ? `https://www.roblox.com/users/${robloxRes.userId}/profile`
             : `https://www.roblox.com/users/profile?username=${encodeURIComponent(resolvedUsername)}`;
 
-          const scoreStr = (data.stateFrom || '').match(/(\d+%)|(\d+\.\d+%)/)?.[0] || '100%';
+          const isExam = data.type === 'Bar Exam Result';
+          const scoreMatch = (data.stateFrom || '').match(/(\d+%)|(\d+\.\d+%)/);
+          const scoreStr = (isExam && scoreMatch) ? scoreMatch[0] : null;
 
-          const logChannelId = config.stateBarCertLogChannelId;
+          const logChannelId = config.stateBarCertLogChannelId || '1539839511544991785';
           const logChannel = await interaction.client.channels.fetch(logChannelId).catch(() => null);
 
           if (logChannel && logChannel.isTextBased()) {
+            const certDescription = scoreStr
+              ? `This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower, passing with a score of \`\`${scoreStr}\`\`.`
+              : `This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower via Reciprocal Bar Transfer.`;
+
             const embed = new EmbedBuilder()
               .setTitle('Certification Log')
-              .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower, passing with a score of \`\`${scoreStr}\`\`.`)
+              .setDescription(certDescription)
               .setColor('#2E7D32');
 
             await logChannel.send({ embeds: [embed] });
@@ -456,11 +462,15 @@ async function handleInteraction(interaction) {
             }
           }
 
-          const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+          // Compact space-saving approved message
+          const applicantMention = data.applicant ? `<@${data.applicant.id}>` : (data.discordUser ? `@${data.discordUser}` : 'Unknown');
+          const compactEmbed = new EmbedBuilder()
+            .setAuthor({ name: 'State Bar of Mayflower', iconURL: guildIcon || undefined })
+            .setTitle('Application Approved')
             .setColor('#2E7D32')
-            .addFields({ name: 'Status', value: `Admitted by Executive <@${interaction.user.id}> | SBN: \`${newLicense.sbn}\`` });
+            .setDescription(`✅ **Bar Admission Approved**\n├ **Candidate:** [${resolvedUsername}](${profileUrl})\n├ **Discord:** ${applicantMention}\n├ **Type:** \`${data.type}\` \n├ **Assigned SBN:** \`${newLicense.sbn}\` \n└ **Approved By:** <@${interaction.user.id}>`);
 
-          await interaction.message.edit({ embeds: [origEmbed], components: [] });
+          await interaction.message.edit({ embeds: [compactEmbed], components: [] });
           pendingFilings.delete(filingId);
           return;
         }
@@ -655,8 +665,8 @@ async function handleInteraction(interaction) {
         pendingFilings.set(filingId, filingData);
         addApplication(filingData);
 
-        const stateBarChannelId = config.stateBarCertLogChannelId || config.stateBarPortalChannelId;
-        const clerkChannel = await interaction.client.channels.fetch(stateBarChannelId).catch(() => null);
+        const stateBarReviewChannelId = config.stateBarReviewChannelId || '1539848757967986708';
+        const clerkChannel = await interaction.client.channels.fetch(stateBarReviewChannelId).catch(() => null);
 
         if (clerkChannel && clerkChannel.isTextBased()) {
           const clerkEmbed = new EmbedBuilder()

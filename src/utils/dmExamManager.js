@@ -432,8 +432,8 @@ async function finalizeDmExam(user, session, interaction) {
 
   // Send to Executive Board Review Channel (1538067231236161616)
   if (interaction && interaction.client) {
-    const stateBarChannelId = config.stateBarCertLogChannelId || config.stateBarPortalChannelId;
-    const clerkChannel = await interaction.client.channels.fetch(stateBarChannelId).catch(() => null);
+    const stateBarReviewChannelId = config.stateBarReviewChannelId || '1539848757967986708';
+    const clerkChannel = await interaction.client.channels.fetch(stateBarReviewChannelId).catch(() => null);
 
     if (clerkChannel && clerkChannel.isTextBased()) {
       const clerkEmbed = new EmbedBuilder()
