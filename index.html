@@ -605,7 +605,7 @@
         <div id="tab-page-transfer" class="db-tab-page">
           
           <!-- SUB-VIEW A: ALREADY SUBMITTED TRANSFER NOTICE -->
-          <div id="transfer-view-submitted" class="fieldset-box" style="display: none; max-width: 600px; margin: 30px auto; background: #fff3cd; border-color: #ffeeba;">
+          <div id="transfer-view-submitted" class="fieldset-box" style="display: none; max-width: 620px; margin: 30px auto; background: #fff3cd; border-color: #ffeeba;">
             <legend style="color: #856404;">[!] Transfer Application Previously Logged</legend>
             <p style="font-size: 12px; line-height: 18px; color: #856404; margin-bottom: 12px;">
               <strong>Notice:</strong> A Reciprocal Bar Transfer application from this device/user has already been submitted and is currently pending Executive Director review.
@@ -616,34 +616,44 @@
           </div>
 
           <!-- SUB-VIEW B: FORM -->
-          <div id="transfer-view-form" class="fieldset-box" style="max-width: 600px; margin: 10px auto; background: #c0c0c0;">
-            <legend>Reciprocal Bar Transfer Application Form</legend>
-            <p style="margin-bottom: 14px; color: #333333; font-size: 11px;">
+          <div id="transfer-view-form" class="fieldset-box" style="max-width: 620px; margin: 15px auto; background: #c0c0c0;">
+            <legend>State Bar of Mayflower - Reciprocal Bar Transfer Application</legend>
+            <p style="margin-bottom: 12px; color: #222; font-size: 11px; line-height: 16px;">
               Licensed attorneys from recognized reciprocal jurisdictions may submit an application for Mayflower State Bar admission. Submissions are sent directly to the Central Database for Executive review.
             </p>
 
-            <div class="form-group">
-              <label for="transfer-roblox">Roblox Username:</label>
-              <input type="text" id="transfer-roblox" class="win-input" placeholder="e.g. MayflowerAttorney">
+            <div class="fieldset-box" style="background: #ffffff; margin-bottom: 14px;">
+              <legend>Applicant Credentials &amp; Reciprocal Evidence</legend>
+
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="transfer-roblox">Roblox Username (Required):</label>
+                <input type="text" id="transfer-roblox" class="win-input" placeholder="e.g. MayflowerAttorney" style="width: 280px;">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="transfer-discord">Discord Username:</label>
+                <input type="text" id="transfer-discord" class="win-input" placeholder="e.g. lawyer#0001" style="width: 280px;">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="transfer-state-from">State Transferring From (Required):</label>
+                <input type="text" id="transfer-state-from" class="win-input" placeholder="e.g. State of Firestone Bar / Superior Court" style="width: 320px;">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="transfer-evidence">Evidence of Certification (Required):</label>
+                <textarea id="transfer-evidence" class="win-input" rows="3" placeholder="Paste link or text proof of active bar certification (e.g. certificate link, bar roster serial number)..." style="resize: vertical; width: 100%;"></textarea>
+              </div>
+
+              <div style="font-size: 10px; color: #666; background: #f8f9fa; padding: 6px; border: 1px solid #ddd; margin-top: 6px;">
+                <strong>Verification Policy:</strong> Transfer applications are verified against participating reciprocal state bar registries. Submission of falsified credentials will result in a permanent bar ban under 4 M.S.C. 6 § 7101.
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="transfer-discord">Discord Username:</label>
-              <input type="text" id="transfer-discord" class="win-input" placeholder="e.g. lawyer#0001">
-            </div>
-
-            <div class="form-group">
-              <label for="transfer-state-from">State Transferring From:</label>
-              <input type="text" id="transfer-state-from" class="win-input" placeholder="e.g. State of Firestone Bar / Superior Court">
-            </div>
-
-            <div class="form-group">
-              <label for="transfer-evidence">Evidence of Certification:</label>
-              <textarea id="transfer-evidence" class="win-input" rows="4" placeholder="Paste link or text proof of active bar certification (e.g. certificate link, bar roster serial number)..." style="resize: vertical;"></textarea>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
-              <button id="btn-submit-transfer" class="win-button" style="font-weight: bold; width: 140px;" onclick="submitBarTransfer()">Submit Application</button>
+            <div style="display: flex; justify-content: center; margin-top: 16px;">
+              <button id="btn-submit-transfer" class="win-button" style="font-weight: bold; padding: 6px 24px; font-size: 12px; background: #d4edda; border-color: #28a745; color: #155724;" onclick="submitBarTransfer()">
+                [ Submit Reciprocal Application ]
+              </button>
             </div>
           </div>
 
