@@ -237,10 +237,34 @@ async function handleInteraction(interaction) {
     }
 
     // =========================================================================
-    // 2. BUTTON INTERACTIONS (FILING PANEL & CLERK ACTIONS)
+    // 2. BUTTON INTERACTIONS (FILING PANEL, STATE BAR PORTAL & CLERK ACTIONS)
     // =========================================================================
     if (interaction.isButton()) {
       const { customId } = interaction;
+
+      // State Bar Portal: Take Exam via DMs
+      if (customId === 'bar_exam_via_dms') {
+        const modal = new ModalBuilder().setCustomId('bar_exam_dm_modal').setTitle('State Bar Exam Registration');
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('roblox_user').setLabel('Roblox Username').setStyle(TextInputStyle.Short).setRequired(true)),
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('discord_user').setLabel('Discord Username').setStyle(TextInputStyle.Short).setRequired(true))
+        );
+        await interaction.showModal(modal);
+        return;
+      }
+
+      // State Bar Portal: Transfer via DMs
+      if (customId === 'bar_transfer_via_dms') {
+        const modal = new ModalBuilder().setCustomId('bar_transfer_dm_modal').setTitle('Reciprocal Bar Transfer Application');
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('roblox_user').setLabel('Roblox Username').setStyle(TextInputStyle.Short).setRequired(true)),
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('discord_user').setLabel('Discord Username').setStyle(TextInputStyle.Short).setRequired(true)),
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('state_from').setLabel('State / Jurisdiction From').setPlaceholder('e.g. State of Firestone').setStyle(TextInputStyle.Short).setRequired(true)),
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('evidence').setLabel('Proof / Evidence of Active Certification').setPlaceholder('Link to bar license certificate...').setStyle(TextInputStyle.Paragraph).setRequired(true))
+        );
+        await interaction.showModal(modal);
+        return;
+      }
 
       // Civil Choice Trigger: Person vs Entity
       if (customId === 'file_btn_civil') {
@@ -464,10 +488,80 @@ async function handleInteraction(interaction) {
     }
 
     // =========================================================================
-    // 3. MODAL SUBMISSIONS (COURT FILINGS)
+    // 3. MODAL SUBMISSIONS (COURT FILINGS & STATE BAR PORTALS)
     // =========================================================================
     if (interaction.isModalSubmit()) {
       const { customId } = interaction;
+
+      // State Bar Exam DM Modal
+      if (customId === 'bar_exam_dm_modal') {
+        await interaction.deferReply({ ephemeral: true });
+        const robloxUser = interaction.fields.getTextInputValue('roblox_user').trim();
+
+        try {
+          await interaction.user.send({
+            content: `Welcome to the Official State Bar Examination, Candidate **${robloxUser}**!\n\nTo enter the secure testing environment and take your 25-Question Statutory Examination, click the link below:\n👉 https://mysticwavezzz.github.io/statebar/`
+          });
+          await interaction.editReply({ content: `Exam access link sent! Please check your Direct Messages (<@${interaction.user.id}>).` });
+        } catch (err) {
+          await interaction.editReply({
+            content: `Notice: Could not send DM. Please enable Direct Messages from server members, or take the exam directly on the website:\n👉 https://mysticwavezzz.github.io/statebar/`
+          });
+        }
+        return;
+      }
+
+      // State Bar Transfer DM Modal
+      if (customId === 'bar_transfer_dm_modal') {
+        await interaction.deferReply({ ephemeral: true });
+        const robloxUser = interaction.fields.getTextInputValue('roblox_user').trim();
+        const discordUser = interaction.fields.getTextInputValue('discord_user').trim();
+        const stateFrom = interaction.fields.getTextInputValue('state_from').trim();
+        const evidence = interaction.fields.getTextInputValue('evidence').trim();
+
+        const filingId = `transfer_${Date.now()}`;
+        const filingData = {
+          id: filingId,
+          type: 'Bar Transfer',
+          petitioner: robloxUser,
+          respondent: stateFrom,
+          defendant: stateFrom,
+          evidence: evidence,
+          filingLink: evidence,
+          applicant: interaction.user
+        };
+
+        pendingFilings.set(filingId, filingData);
+
+        const clerkChannelId = config.clerkReviewChannelId;
+        const clerkChannel = await interaction.client.channels.fetch(clerkChannelId).catch(() => null);
+
+        if (clerkChannel && clerkChannel.isTextBased()) {
+          const clerkEmbed = new EmbedBuilder()
+            .setAuthor({ name: 'State Bar of Harrison County', iconURL: guildIcon || undefined })
+            .setTitle('Reciprocal Bar Transfer Application')
+            .setColor('#6B21A8')
+            .addFields(
+              { name: 'Roblox Username', value: robloxUser, inline: true },
+              { name: 'Discord Handle', value: discordUser, inline: true },
+              { name: 'State / Jurisdiction From', value: stateFrom, inline: true },
+              { name: 'Proof of Active License', value: `[License Evidence Link](${evidence})`, inline: false }
+            )
+            .setFooter({ text: 'Submitted via State Bar DM Portal' });
+
+          const actionRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(`clerk_approve_${filingId}`).setLabel('Approve Admission').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`clerk_deny_${filingId}`).setLabel('Deny Admission').setStyle(ButtonStyle.Danger)
+          );
+
+          await clerkChannel.send({ embeds: [clerkEmbed], components: [actionRow] });
+        }
+
+        await interaction.editReply({
+          content: `SUCCESS: Your Reciprocal Bar Transfer Application for **${robloxUser}** has been submitted to the Executive Board for review.`
+        });
+        return;
+      }
 
       if (customId.startsWith('filing_modal_')) {
         await interaction.deferReply({ ephemeral: true });

@@ -1,4 +1,5 @@
 const { getFilingPanel } = require('../panels/filingPanel');
+const { getBarPortalPanel } = require('../panels/barPortalPanel');
 const { registerCommands } = require('../utils/deployCommands');
 const config = require('../../config.json');
 
@@ -45,12 +46,12 @@ async function syncGuildNicknames(client) {
 }
 
 /**
- * Deploys or updates permanent Filing Panel in Judiciary filing channel (1537964874527936584)
+ * Deploys or updates permanent panels across Judiciary and State Bar guilds
  * @param {import('discord.js').Client} client 
  */
 async function deployPanels(client) {
+  // 1. Permanent Court Filing Panel (1537964874527936584)
   const filingChannelId = config.judiciaryFilingChannelId;
-
   if (filingChannelId) {
     try {
       const channel = await client.channels.fetch(filingChannelId).catch((e) => {
@@ -78,6 +79,38 @@ async function deployPanels(client) {
       }
     } catch (err) {
       console.error('[Auto-Deploy Error] Failed deploying Court Filing Panel:', err.message);
+    }
+  }
+
+  // 2. Permanent State Bar Admission Portal Panel (1539382125382471774)
+  const barPortalChannelId = config.stateBarPortalChannelId;
+  if (barPortalChannelId) {
+    try {
+      const barChannel = await client.channels.fetch(barPortalChannelId).catch((e) => {
+        console.warn(`[Auto-Deploy] Could not fetch State Bar Portal channel (${barPortalChannelId}): ${e.message}`);
+        return null;
+      });
+
+      if (barChannel && barChannel.isTextBased()) {
+        const barGuildIcon = barChannel.guild ? barChannel.guild.iconURL() : null;
+        const barPanelData = getBarPortalPanel(barGuildIcon);
+
+        const messages = await barChannel.messages.fetch({ limit: 10 }).catch(() => null);
+        const botMessages = messages ? messages.filter(m => m.author.id === client.user.id) : null;
+
+        if (botMessages && botMessages.size > 0) {
+          console.log('[Auto-Deploy] Updating existing State Bar Portal Panel...');
+          const lastBotMsg = botMessages.first();
+          await lastBotMsg.edit(barPanelData);
+          console.log('[Auto-Deploy] State Bar Portal Panel updated successfully.');
+        } else {
+          console.log('[Auto-Deploy] Posting new State Bar Portal Panel...');
+          await barChannel.send(barPanelData);
+          console.log('[Auto-Deploy] State Bar Portal Panel posted successfully.');
+        }
+      }
+    } catch (err) {
+      console.error('[Auto-Deploy Error] Failed deploying State Bar Portal Panel:', err.message);
     }
   }
 }
