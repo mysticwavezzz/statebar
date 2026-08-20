@@ -510,6 +510,41 @@
     function saveRoster(rosterList) {
       localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(rosterList));
       notifyStorageChange();
+      syncRosterWithServer();
+    }
+
+    async function syncRosterWithServer() {
+      const localRoster = getRoster();
+      
+      if (localRoster && localRoster.length > 0) {
+        fetch('http://localhost:3000/api/bulk-sync-roster', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roster: localRoster })
+        }).catch(() => {});
+      }
+
+      try {
+        const res = await fetch('http://localhost:3000/api/roster');
+        if (res.ok) {
+          const serverRoster = await res.json();
+          if (Array.isArray(serverRoster) && serverRoster.length > 0) {
+            const existingSBNs = new Set(localRoster.map(r => r.sbn));
+            let updated = false;
+            serverRoster.forEach(sr => {
+              if (sr.sbn && !existingSBNs.has(sr.sbn)) {
+                localRoster.push(sr);
+                existingSBNs.add(sr.sbn);
+                updated = true;
+              }
+            });
+            if (updated) {
+              localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(localRoster));
+              renderRosterTable();
+            }
+          }
+        }
+      } catch (e) {}
     }
 
     function getApplications() {
@@ -942,6 +977,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       getRoster();
       renderApplicationsTable();
+      syncRosterWithServer();
     });
   </script>
 </body>

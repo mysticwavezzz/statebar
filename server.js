@@ -47,6 +47,41 @@ app.post('/api/sync-roster', (req, res) => {
   res.json({ success: true, entry });
 });
 
+app.post('/api/bulk-sync-roster', (req, res) => {
+  const { roster } = req.body;
+  if (!Array.isArray(roster)) return res.status(400).json({ error: 'Roster array required' });
+
+  const currentRoster = getRoster();
+  const existingSBNs = new Set(currentRoster.map(r => r.sbn));
+  const existingNames = new Set(currentRoster.map(r => (r.name || '').toLowerCase()));
+
+  let updated = false;
+  roster.forEach(item => {
+    if (item.name) {
+      const itemSbn = item.sbn || String(Math.floor(1000000000 + Math.random() * 9000000000));
+      const itemKey = item.name.toLowerCase();
+      if (!existingSBNs.has(itemSbn) && !existingNames.has(itemKey)) {
+        currentRoster.push({
+          id: item.id || Date.now(),
+          name: item.name,
+          sbn: itemSbn,
+          status: item.status || 'Active',
+          date: item.date || new Date().toLocaleDateString()
+        });
+        existingSBNs.add(itemSbn);
+        existingNames.add(itemKey);
+        updated = true;
+      }
+    }
+  });
+
+  if (updated) {
+    saveRoster(currentRoster);
+  }
+
+  res.json({ success: true, count: currentRoster.length, roster: currentRoster });
+});
+
 // API Endpoint to send Bar Certification Log embed to Discord Channel 1539839511544991785
 app.post('/api/certify-bar', async (req, res) => {
   const { robloxUser, score } = req.body;
