@@ -3,93 +3,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>State Bar Workstation - System Under Maintenance</title>
+  <title>Windows 2000 - Stop 0x0000007B System Error</title>
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
     }
     body, html {
       width: 100vw;
       height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 50%, #60A5FA 100%);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #0000AA;
       color: #FFFFFF;
+      font-family: "Lucida Console", "Courier New", Courier, monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 40px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .maintenance-box {
-      background: rgba(15, 23, 42, 0.85);
-      border: 2px solid #60A5FA;
-      border-radius: 12px;
-      padding: 40px 50px;
-      max-width: 650px;
-      text-align: center;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-      backdrop-filter: blur(10px);
+    .bsod-content {
+      max-width: 900px;
     }
-    .icon {
-      font-size: 64px;
+    .error-code {
+      background-color: #0000AA;
+      color: #FFFFFF;
       margin-bottom: 20px;
+      font-weight: bold;
     }
     h1 {
-      font-size: 26px;
-      font-weight: 700;
-      color: #93C5FD;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      margin-bottom: 15px;
-    }
-    h2 {
       font-size: 16px;
-      font-weight: 600;
-      color: #E0F2FE;
+      font-weight: bold;
       margin-bottom: 20px;
+      text-transform: uppercase;
     }
     p {
-      font-size: 14px;
-      line-height: 1.6;
-      color: #CBD5E1;
-      margin-bottom: 25px;
+      margin-bottom: 18px;
     }
-    .status-badge {
+    ul {
+      margin-left: 30px;
+      margin-bottom: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    .tech-info {
+      margin-top: 25px;
+      border-top: 1px dashed #FFFFFF;
+      padding-top: 15px;
+    }
+    a.db-btn {
       display: inline-block;
-      background-color: #2563EB;
-      color: #FFFFFF;
-      padding: 8px 18px;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 13px;
-      border: 1px solid #60A5FA;
-    }
-    .db-link {
-      display: block;
-      margin-top: 30px;
-      color: #93C5FD;
-      font-size: 12px;
-      text-decoration: none;
-      opacity: 0.7;
-    }
-    .db-link:hover {
-      opacity: 1;
+      margin-top: 25px;
+      color: #FFFF55;
       text-decoration: underline;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    a.db-btn:hover {
+      background-color: #FFFFFF;
+      color: #0000AA;
+      text-decoration: none;
+    }
+    .blink {
+      animation: blinker 1s linear infinite;
+    }
+    @keyframes blinker {
+      50% { opacity: 0; }
     }
   </style>
 </head>
 <body>
-  <div class="maintenance-box">
-    <div class="icon">🛠️</div>
-    <h1>SYSTEM UNDER MAINTENANCE</h1>
-    <h2>State Bar of Mayflower — Web Portal Temporarily Offline</h2>
-    <p>
-      The official Statutory Examination and Web Workstation portal is currently undergoing scheduled system maintenance.
-      <br><br>
-      Candidates wishing to sit for the 25-Question Statutory Examination or submit a Reciprocal Bar Transfer may do so directly via the <strong>State Bar Discord Portal</strong> using <code>Take Exam via DMs</code> or <code>Transfer via DMs</code>.
-    </p>
-    <div class="status-badge">⚙️ Maintenance Mode Active</div>
-    <a href="database.html" class="db-link">Executive Database Portal &rarr;</a>
+  <div class="bsod-content">
+    <div class="error-code">
+      *** STOP: 0x0000007B (0x80523C80, 0xC0000034, 0x00000000, 0x00000000)<br>
+      STATE_BAR_SYSTEM_MAINTENANCE_IN_PROGRESS
+    </div>
+
+    <p>A problem has been detected and the State Bar Web Portal has been shut down to prevent corruption of statutory examination records.</p>
+
+    <p>If this is the first time you've seen this Stop error screen, restart your browser. If this screen appears again, follow these steps:</p>
+
+    <ul>
+      <li>Verify that the State Bar Discord Server is properly connected.</li>
+      <li>If sitting for the 25-Question Statutory Examination or submitting a Reciprocal Bar Transfer, utilize the <strong>State Bar Discord Portal</strong> (select <code>Take Exam via DMs</code> or <code>Transfer via DMs</code>).</li>
+      <li>Disable or remove any newly installed browser extensions that interfere with statutory testing.</li>
+    </ul>
+
+    <div class="tech-info">
+      Technical information:<br><br>
+      *** STOP: 0x0000001E (0xC0000005, 0x8010C42A, 0x00000000, 0x00000001)<br>
+      *** MAYFLOWER_STATE_BAR.SYS - Address 8010C42A base at 80100000, DateStamp 60a4f10a
+    </div>
+
+    <a href="database.html" class="db-btn">[ F8 = Advanced Options -> Open Executive Database Portal ]</a>
+  </div>
+
+  <div>
+    Press CTRL+ALT+DEL to restart your workstation <span class="blink">_</span>
   </div>
 </body>
 </html>
