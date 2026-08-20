@@ -391,6 +391,24 @@
       padding: 0 14px 14px 14px;
     }
 
+    /* Instant Print & Screenshot Protection Rules */
+    @media print {
+      html, body, #desktop, .db-window, #exam-questions-container, .exam-question-card {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+      }
+    }
+
+    body.shield-active #exam-questions-container,
+    body.shield-active .exam-question-card,
+    body.shield-active .db-window {
+      filter: blur(80px) contrast(0) grayscale(1) !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
     /* Full-screen anti-screenshot & security protection shield */
     #screenshot-shield {
       position: fixed;
@@ -980,54 +998,50 @@
     }
 
     /* ==========================================================================
-       ANTI-SCREENSHOT & COPY PROTECTION SHIELD
+       ANTI-SCREENSHOT & COPY PROTECTION SHIELD (CAPTURE PHASE)
        ========================================================================== */
     function triggerScreenshotShield() {
       if (isExamActive) {
+        document.body.classList.add('shield-active');
         document.getElementById('screenshot-shield').style.display = 'flex';
       }
     }
 
     function dismissScreenshotShield() {
+      document.body.classList.remove('shield-active');
       document.getElementById('screenshot-shield').style.display = 'none';
     }
 
-    // Keydown listeners for PrintScreen, Ctrl+P, Ctrl+C, Ctrl+Shift+S, F12
+    // Intercept ANY keydown at root capture phase during active testing
     window.addEventListener('keydown', (e) => {
       if (!isExamActive) return;
 
-      // PrintScreen Key
-      if (e.key === 'PrintScreen' || e.keyCode === 44) {
-        e.preventDefault();
-        triggerScreenshotShield();
-      }
+      // Instantly apply heavy blur + opacity zero before OS framebuffer capture
+      triggerScreenshotShield();
 
-      // Windows + Shift + S or Ctrl + P (Print) or Ctrl + C (Copy) or Ctrl + Shift + I / F12
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 'c' || e.key === 'C' || e.key === 'u' || e.key === 'U')) {
+      if (e.key === 'PrintScreen' || e.keyCode === 44 || e.ctrlKey || e.metaKey || e.key === 'F12') {
         e.preventDefault();
-        triggerScreenshotShield();
       }
-
-      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j'))) {
-        e.preventDefault();
-        triggerScreenshotShield();
-      }
-    });
+    }, true);
 
     window.addEventListener('keyup', (e) => {
-      if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) {
+      if (isExamActive) {
         triggerScreenshotShield();
       }
-    });
+    }, true);
 
-    // Detect tab/window blur or visibility change during active exam
+    // Detect focus loss, tab switch, or cursor leaving window during active exam
     window.addEventListener('blur', () => {
       if (isExamActive) triggerScreenshotShield();
-    });
+    }, true);
 
     document.addEventListener('visibilitychange', () => {
       if (isExamActive && document.hidden) triggerScreenshotShield();
-    });
+    }, true);
+
+    document.addEventListener('mouseleave', () => {
+      if (isExamActive) triggerScreenshotShield();
+    }, true);
 
     /* ==========================================================================
        TAB SWITCHING & DIALOGS
