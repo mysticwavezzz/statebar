@@ -28,8 +28,9 @@ function generateCaseCode(type) {
     'Search Warrant': 'SW'
   };
   const prefix = prefixMap[type] || 'CS';
-  const num = Math.floor(100 + Math.random() * 900);
-  return `${prefix}-${num}`;
+  const num = String(Math.floor(100 + Math.random() * 900));
+  const yearYY = String(new Date().getFullYear()).slice(-2); // e.g. "26"
+  return `${prefix}-${num}-${yearYY}`;
 }
 
 /**
