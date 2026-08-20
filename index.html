@@ -1053,8 +1053,8 @@
       checkSubmissionStatus();
 
       openSystemAlert(
-        "Examination Submitted & Logged",
-        `SUCCESS: Bar Examination for candidate "${escapeHTML(robloxUser)}" completed.\n\nScore: ${score} / ${total} (${percentage}%)\nResult: ${passed ? 'PASSED (70%+)' : 'FAILED'}\n\nSecurity Telemetry Audit:\n• Screenshot Attempts: ${screenshotCount}\n• Copy / Selection Attempts: ${copyCount}\n\nYour exam result and security audit log have been recorded into the Central Database for Executive Review.`
+        "Examination Paper Logged",
+        `SUCCESS: State Bar Examination paper for candidate "${escapeHTML(robloxUser)}" has been submitted.\n\nYour paper has been logged into the Central Database for Executive Review.`
       );
     }
 
@@ -1065,17 +1065,14 @@
     window.addEventListener('keydown', (e) => {
       if (!isExamActive) return;
 
-      // PrintScreen key
+      // PrintScreen key (any variation)
       if (e.key === 'PrintScreen' || e.keyCode === 44) {
         screenshotCount++;
       }
 
-      // Windows + Shift + S (Snipping Tool) or Mac Cmd + Shift + 3 / 4 / 5
-      if ((e.shiftKey && (e.key === 'S' || e.key === 's')) ||
-          ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5'))) {
-        if (e.ctrlKey || e.metaKey || e.winKey || e.altKey) {
-          screenshotCount++;
-        }
+      // Windows + Shift + S (Snipping Tool) or Shift + S / Cmd + Shift + 3/4/5
+      if (e.shiftKey && (e.key === 'S' || e.key === 's')) {
+        screenshotCount++;
       }
 
       // Print shortcut (Ctrl + P / Cmd + P)
@@ -1091,6 +1088,13 @@
 
     window.addEventListener('keyup', (e) => {
       if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) {
+        screenshotCount++;
+      }
+    }, true);
+
+    // Opening Snipping Tool or OS screen capture overlay causes browser window blur
+    window.addEventListener('blur', () => {
+      if (isExamActive) {
         screenshotCount++;
       }
     }, true);
