@@ -555,6 +555,42 @@
     function saveApplications(appsList) {
       localStorage.setItem(STORAGE_KEY_APPS, JSON.stringify(appsList));
       notifyStorageChange();
+      syncApplicationsWithServer();
+    }
+
+    async function syncApplicationsWithServer() {
+      const localApps = getApplications();
+      
+      if (localApps && localApps.length > 0) {
+        fetch('http://localhost:3000/api/sync-applications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apps: localApps })
+        }).catch(() => {});
+      }
+
+      try {
+        const res = await fetch('http://localhost:3000/api/applications');
+        if (res.ok) {
+          const serverApps = await res.json();
+          if (Array.isArray(serverApps) && serverApps.length > 0) {
+            const existingIds = new Set(localApps.map(a => String(a.id)));
+            let updated = false;
+            serverApps.forEach(sa => {
+              const saKey = String(sa.id);
+              if (!existingIds.has(saKey)) {
+                localApps.unshift(sa);
+                existingIds.add(saKey);
+                updated = true;
+              }
+            });
+            if (updated) {
+              localStorage.setItem(STORAGE_KEY_APPS, JSON.stringify(localApps));
+              renderApplicationsTable();
+            }
+          }
+        }
+      } catch (e) {}
     }
 
     function notifyStorageChange() {
@@ -978,6 +1014,7 @@
       getRoster();
       renderApplicationsTable();
       syncRosterWithServer();
+      syncApplicationsWithServer();
     });
   </script>
 </body>

@@ -1,5 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { validateRobloxUsername } = require('./roblox');
+const { addApplication } = require('./dbStore');
 const config = require('../../config.json');
 
 // Map of active user DM sessions: userId -> sessionObj
@@ -426,6 +427,8 @@ async function finalizeDmExam(user, session, interaction) {
     date: new Date().toLocaleDateString(),
     applicant: user
   };
+
+  addApplication(examRecord);
 
   // Send to Executive Board Review Channel (1538067231236161616)
   if (interaction && interaction.client) {

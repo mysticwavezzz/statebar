@@ -20,6 +20,7 @@ const {
   handleDmExamAnswer
 } = require('../utils/dmExamManager');
 const { getRoster, addBarLicense } = require('../utils/rosterStore');
+const { addApplication } = require('../utils/dbStore');
 
 // Temporary in-memory cache for filings data pending clerk review
 const pendingFilings = new Map();
@@ -601,6 +602,7 @@ async function handleInteraction(interaction) {
         };
 
         pendingFilings.set(filingId, filingData);
+        addApplication(filingData);
 
         const clerkChannelId = config.clerkReviewChannelId;
         const clerkChannel = await interaction.client.channels.fetch(clerkChannelId).catch(() => null);

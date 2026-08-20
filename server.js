@@ -33,6 +33,36 @@ app.get('/database.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'database.html'));
 });
 
+const { getApplications, saveApplications, addApplication } = require('./src/utils/dbStore');
+
+app.get('/api/applications', (req, res) => {
+  res.json(getApplications());
+});
+
+app.post('/api/sync-applications', (req, res) => {
+  const { apps } = req.body;
+  if (!Array.isArray(apps)) return res.status(400).json({ error: 'Apps array required' });
+
+  const currentApps = getApplications();
+  const existingIds = new Set(currentApps.map(a => String(a.id)));
+
+  let updated = false;
+  apps.forEach(item => {
+    const itemKey = String(item.id);
+    if (!existingIds.has(itemKey)) {
+      currentApps.push(item);
+      existingIds.add(itemKey);
+      updated = true;
+    }
+  });
+
+  if (updated) {
+    saveApplications(currentApps);
+  }
+
+  res.json({ success: true, count: currentApps.length, apps: currentApps });
+});
+
 const { getRoster, saveRoster, addBarLicense } = require('./src/utils/rosterStore');
 
 app.get('/api/roster', (req, res) => {
