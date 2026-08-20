@@ -1,5 +1,6 @@
 const { getFilingPanel } = require('../panels/filingPanel');
 const { getBarPortalPanel } = require('../panels/barPortalPanel');
+const { getRosterPanel } = require('../panels/rosterPanel');
 const { registerCommands } = require('../utils/deployCommands');
 const config = require('../../config.json');
 
@@ -111,6 +112,38 @@ async function deployPanels(client) {
       }
     } catch (err) {
       console.error('[Auto-Deploy Error] Failed deploying State Bar Portal Panel:', err.message);
+    }
+  }
+
+  // 3. Static Bar Roster Embed Panel (1539848820056260628)
+  const rosterChannelId = config.stateBarRosterChannelId || '1539848820056260628';
+  if (rosterChannelId) {
+    try {
+      const rosterChannel = await client.channels.fetch(rosterChannelId).catch((e) => {
+        console.warn(`[Auto-Deploy] Could not fetch State Bar Roster channel (${rosterChannelId}): ${e.message}`);
+        return null;
+      });
+
+      if (rosterChannel && rosterChannel.isTextBased()) {
+        const rosterGuildIcon = rosterChannel.guild ? rosterChannel.guild.iconURL() : null;
+        const rosterPanelData = getRosterPanel(rosterGuildIcon);
+
+        const messages = await rosterChannel.messages.fetch({ limit: 10 }).catch(() => null);
+        const botMessages = messages ? messages.filter(m => m.author.id === client.user.id) : null;
+
+        if (botMessages && botMessages.size > 0) {
+          console.log('[Auto-Deploy] Updating existing Static Bar Roster Panel...');
+          const lastBotMsg = botMessages.first();
+          await lastBotMsg.edit(rosterPanelData);
+          console.log('[Auto-Deploy] Static Bar Roster Panel updated successfully.');
+        } else {
+          console.log('[Auto-Deploy] Posting new Static Bar Roster Panel...');
+          await rosterChannel.send(rosterPanelData);
+          console.log('[Auto-Deploy] Static Bar Roster Panel posted successfully.');
+        }
+      }
+    } catch (err) {
+      console.error('[Auto-Deploy Error] Failed deploying Static Bar Roster Panel:', err.message);
     }
   }
 }

@@ -19,7 +19,8 @@ const {
   sendNextDmExamQuestion,
   handleDmExamAnswer
 } = require('../utils/dmExamManager');
-const { getRoster, addBarLicense } = require('../utils/rosterStore');
+const { getRoster, saveRoster, addBarLicense } = require('../utils/rosterStore');
+const { getRosterPanel } = require('../panels/rosterPanel');
 const { addApplication } = require('../utils/dbStore');
 
 // Temporary in-memory cache for filings data pending clerk review
@@ -303,6 +304,46 @@ async function handleInteraction(interaction) {
         return;
       }
 
+      // Static Bar Roster Panel: Add Attorney Button
+      if (customId === 'roster_add_attorney') {
+        const modal = new ModalBuilder().setCustomId('roster_modal_add').setTitle('Add Attorney to Bar Roster');
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('roblox_user').setLabel('Roblox Username').setStyle(TextInputStyle.Short).setRequired(true)),
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('status').setLabel('Status (Active, Suspended, Disbarred)').setValue('Active').setStyle(TextInputStyle.Short).setRequired(true))
+        );
+        await interaction.showModal(modal);
+        return;
+      }
+
+      // Static Bar Roster Panel: Edit Attorney Status Button
+      if (customId === 'roster_edit_attorney') {
+        const modal = new ModalBuilder().setCustomId('roster_modal_edit').setTitle('Edit Attorney Status');
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('target_user').setLabel('Roblox Username or SBN').setStyle(TextInputStyle.Short).setRequired(true)),
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('new_status').setLabel('New Status (Active, Suspended, Inactive, Disbarred)').setStyle(TextInputStyle.Short).setRequired(true))
+        );
+        await interaction.showModal(modal);
+        return;
+      }
+
+      // Static Bar Roster Panel: Remove Attorney Button
+      if (customId === 'roster_remove_attorney') {
+        const modal = new ModalBuilder().setCustomId('roster_modal_remove').setTitle('Remove Attorney from Bar Roster');
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('target_user').setLabel('Roblox Username or SBN to Remove').setStyle(TextInputStyle.Short).setRequired(true))
+        );
+        await interaction.showModal(modal);
+        return;
+      }
+
+      // Static Bar Roster Panel: Refresh Roster Button
+      if (customId === 'roster_refresh') {
+        await interaction.deferUpdate();
+        const rosterData = getRosterPanel(guildIcon);
+        await interaction.message.edit(rosterData);
+        return;
+      }
+
       // Civil Choice Trigger: Person vs Entity
       if (customId === 'file_btn_civil') {
         const row = new ActionRowBuilder().addComponents(
@@ -404,6 +445,16 @@ async function handleInteraction(interaction) {
 
           // Auto-add candidate to official Bar Roster
           const newLicense = addBarLicense(resolvedUsername);
+
+          const rosterChannelId = config.stateBarRosterChannelId || '1539848820056260628';
+          const rosterChannel = await interaction.client.channels.fetch(rosterChannelId).catch(() => null);
+          if (rosterChannel && rosterChannel.isTextBased()) {
+            const messages = await rosterChannel.messages.fetch({ limit: 10 }).catch(() => null);
+            const botMessages = messages ? messages.filter(m => m.author.id === interaction.client.user.id) : null;
+            if (botMessages && botMessages.size > 0) {
+              await botMessages.first().edit(getRosterPanel(guildIcon));
+            }
+          }
 
           const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
             .setColor('#2E7D32')
@@ -631,6 +682,109 @@ async function handleInteraction(interaction) {
         await interaction.editReply({
           content: `SUCCESS: Your Reciprocal Bar Transfer Application for **${robloxUser}** has been submitted to the Executive Board for review.`
         });
+        return;
+      }
+
+      // Roster Management Modal: Add Attorney
+      if (customId === 'roster_modal_add') {
+        await interaction.deferReply({ ephemeral: true });
+        const robloxUser = interaction.fields.getTextInputValue('roblox_user').trim();
+        const status = interaction.fields.getTextInputValue('status').trim() || 'Active';
+
+        const robloxRes = await validateRobloxUsername(robloxUser).catch(() => ({ valid: false }));
+        const resolvedUsername = robloxRes.username || robloxUser;
+        const profileUrl = robloxRes.userId
+          ? `https://www.roblox.com/users/${robloxRes.userId}/profile`
+          : `https://www.roblox.com/users/profile?username=${encodeURIComponent(resolvedUsername)}`;
+
+        const entry = addBarLicense(resolvedUsername, null, status);
+
+        // 1. Send Certification Log to Results Channel 1539839511544991785
+        const certChannelId = config.stateBarCertLogChannelId || '1539839511544991785';
+        const certChannel = await interaction.client.channels.fetch(certChannelId).catch(() => null);
+
+        if (certChannel && certChannel.isTextBased()) {
+          const certEmbed = new EmbedBuilder()
+            .setTitle('Certification Log')
+            .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower, passing with a score of \`\`100%\`\`.`)
+            .setColor('#2E7D32');
+
+          await certChannel.send({ embeds: [certEmbed] });
+        }
+
+        // 2. Auto-Refresh Static Roster Panel in channel 1539848820056260628
+        const rosterChannelId = config.stateBarRosterChannelId || '1539848820056260628';
+        const rosterChannel = await interaction.client.channels.fetch(rosterChannelId).catch(() => null);
+        if (rosterChannel && rosterChannel.isTextBased()) {
+          const messages = await rosterChannel.messages.fetch({ limit: 10 }).catch(() => null);
+          const botMessages = messages ? messages.filter(m => m.author.id === interaction.client.user.id) : null;
+          if (botMessages && botMessages.size > 0) {
+            await botMessages.first().edit(getRosterPanel(guildIcon));
+          }
+        }
+
+        await interaction.editReply({ content: `SUCCESS: Attorney **${resolvedUsername}** added to Bar Roster (SBN: \`${entry.sbn}\`) and logged to Results Channel <#${certChannelId}>.` });
+        return;
+      }
+
+      // Roster Management Modal: Edit Attorney Status
+      if (customId === 'roster_modal_edit') {
+        await interaction.deferReply({ ephemeral: true });
+        const targetUser = interaction.fields.getTextInputValue('target_user').trim().toLowerCase();
+        const newStatus = interaction.fields.getTextInputValue('new_status').trim();
+
+        const roster = getRoster();
+        const target = roster.find(r => r.name.toLowerCase() === targetUser || r.sbn === targetUser);
+
+        if (!target) {
+          await interaction.editReply({ content: `Error: Attorney "${targetUser}" not found in Bar Roster.` });
+          return;
+        }
+
+        target.status = newStatus;
+        saveRoster(roster);
+
+        const rosterChannelId = config.stateBarRosterChannelId || '1539848820056260628';
+        const rosterChannel = await interaction.client.channels.fetch(rosterChannelId).catch(() => null);
+        if (rosterChannel && rosterChannel.isTextBased()) {
+          const messages = await rosterChannel.messages.fetch({ limit: 10 }).catch(() => null);
+          const botMessages = messages ? messages.filter(m => m.author.id === interaction.client.user.id) : null;
+          if (botMessages && botMessages.size > 0) {
+            await botMessages.first().edit(getRosterPanel(guildIcon));
+          }
+        }
+
+        await interaction.editReply({ content: `SUCCESS: Updated status for **${target.name}** (SBN: \`${target.sbn}\`) to \`${newStatus}\`.` });
+        return;
+      }
+
+      // Roster Management Modal: Remove Attorney
+      if (customId === 'roster_modal_remove') {
+        await interaction.deferReply({ ephemeral: true });
+        const targetUser = interaction.fields.getTextInputValue('target_user').trim().toLowerCase();
+
+        let roster = getRoster();
+        const initialLen = roster.length;
+        roster = roster.filter(r => r.name.toLowerCase() !== targetUser && r.sbn !== targetUser);
+
+        if (roster.length === initialLen) {
+          await interaction.editReply({ content: `Error: Attorney "${targetUser}" not found in Bar Roster.` });
+          return;
+        }
+
+        saveRoster(roster);
+
+        const rosterChannelId = config.stateBarRosterChannelId || '1539848820056260628';
+        const rosterChannel = await interaction.client.channels.fetch(rosterChannelId).catch(() => null);
+        if (rosterChannel && rosterChannel.isTextBased()) {
+          const messages = await rosterChannel.messages.fetch({ limit: 10 }).catch(() => null);
+          const botMessages = messages ? messages.filter(m => m.author.id === interaction.client.user.id) : null;
+          if (botMessages && botMessages.size > 0) {
+            await botMessages.first().edit(getRosterPanel(guildIcon));
+          }
+        }
+
+        await interaction.editReply({ content: `SUCCESS: Attorney removed from Bar Roster.` });
         return;
       }
 
