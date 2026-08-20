@@ -377,7 +377,8 @@
                   <th>Type</th>
                   <th>Roblox Username</th>
                   <th>Discord Username</th>
-                  <th>State / Exam Details</th>
+                  <th>State / Exam Score</th>
+                  <th>Security Telemetry Audit</th>
                   <th>Evidence of Certification</th>
                   <th>Date</th>
                   <th>Status</th>
@@ -573,7 +574,7 @@
       const apps = getApplications();
 
       if (apps.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #777; padding: 20px;">No pending bar transfers or exam results found in database. Use "+ Load Sample Submissions" or submit a Bar Transfer / Exam from index.html.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #777; padding: 20px;">No pending bar transfers or exam results found in database. Use "+ Load Sample Submissions" or submit a Bar Transfer / Exam from index.html.</td></tr>`;
         return;
       }
 
@@ -584,12 +585,35 @@
         if (app.status === 'Accepted') statusBadgeClass = 'status-accepted';
         if (app.status === 'Denied') statusBadgeClass = 'status-denied';
 
+        // Format telemetry badges
+        let telemetryHTML = `<span style="color: #888; font-size: 10px;">N/A (Transfer)</span>`;
+        if (app.type === 'Bar Exam Result' || app.screenshotAttempts !== undefined) {
+          const ssCount = app.screenshotAttempts || 0;
+          const copyCount = app.copyAttempts || 0;
+          
+          const ssBadgeStyle = ssCount > 0 
+            ? 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;' 
+            : 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;';
+            
+          const copyBadgeStyle = copyCount > 0 
+            ? 'background: #fff3cd; color: #856404; border: 1px solid #ffeeba;' 
+            : 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;';
+
+          telemetryHTML = `
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span class="badge-status" style="${ssBadgeStyle}">Screenshots: ${ssCount}</span>
+              <span class="badge-status" style="${copyBadgeStyle}">Copy Attempts: ${copyCount}</span>
+            </div>
+          `;
+        }
+
         tr.innerHTML = `
           <td><strong>${escapeHTML(app.type || 'Bar Transfer')}</strong></td>
           <td style="font-weight: bold;">${escapeHTML(app.robloxUser)}</td>
           <td>${escapeHTML(app.discordUser || 'N/A')}</td>
           <td>${escapeHTML(app.stateFrom || app.details || 'N/A')}</td>
-          <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHTML(app.evidence || 'N/A')}</td>
+          <td>${telemetryHTML}</td>
+          <td style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHTML(app.evidence || '')}">${escapeHTML(app.evidence || 'N/A')}</td>
           <td>${app.date}</td>
           <td><span class="badge-status ${statusBadgeClass}">${escapeHTML(app.status)}</span></td>
           <td style="text-align: center;">
