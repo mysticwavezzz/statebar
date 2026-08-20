@@ -1068,53 +1068,74 @@
     }
 
     /* ==========================================================================
-       SILENT SECURITY TELEMETRY AUDITING
+       SILENT SECURITY TELEMETRY AUDITING (DEBOUNCED)
        ========================================================================== */
-    // Track screenshot and print key shortcuts silently without warning popups
+    let lastScreenshotTime = 0;
+    let lastCopyTime = 0;
+
+    function recordScreenshotAttempt() {
+      if (!isExamActive) return;
+      const now = Date.now();
+      // 1.5 second debounce ensures 1 physical screenshot gesture = 1 count
+      if (now - lastScreenshotTime > 1500) {
+        screenshotCount++;
+        lastScreenshotTime = now;
+      }
+    }
+
+    function recordCopyAttempt() {
+      if (!isExamActive) return;
+      const now = Date.now();
+      if (now - lastCopyTime > 1000) {
+        copyCount++;
+        lastCopyTime = now;
+      }
+    }
+
     window.addEventListener('keydown', (e) => {
       if (!isExamActive) return;
 
       // PrintScreen key (any variation)
       if (e.key === 'PrintScreen' || e.keyCode === 44) {
-        screenshotCount++;
+        recordScreenshotAttempt();
       }
 
       // Windows + Shift + S (Snipping Tool) or Shift + S / Cmd + Shift + 3/4/5
       if (e.shiftKey && (e.key === 'S' || e.key === 's')) {
-        screenshotCount++;
+        recordScreenshotAttempt();
       }
 
       // Print shortcut (Ctrl + P / Cmd + P)
       if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
-        screenshotCount++;
+        recordScreenshotAttempt();
       }
 
       // Copy / Cut shortcuts (Ctrl + C, Ctrl + X)
       if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C' || e.key === 'x' || e.key === 'X')) {
-        copyCount++;
+        recordCopyAttempt();
       }
     }, true);
 
     window.addEventListener('keyup', (e) => {
       if (isExamActive && (e.key === 'PrintScreen' || e.keyCode === 44)) {
-        screenshotCount++;
+        recordScreenshotAttempt();
       }
     }, true);
 
     // Opening Snipping Tool or OS screen capture overlay causes browser window blur
     window.addEventListener('blur', () => {
       if (isExamActive) {
-        screenshotCount++;
+        recordScreenshotAttempt();
       }
     }, true);
 
     // Track text selection and right-click copy attempts silently
     document.addEventListener('selectstart', () => {
-      if (isExamActive) copyCount++;
+      if (isExamActive) recordCopyAttempt();
     }, true);
 
     document.addEventListener('copy', () => {
-      if (isExamActive) copyCount++;
+      if (isExamActive) recordCopyAttempt();
     }, true);
 
     /* ==========================================================================
