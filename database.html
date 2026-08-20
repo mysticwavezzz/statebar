@@ -729,6 +729,11 @@
       const defaultWebhook = 'https://discord.com/api/webhooks/1539842389378736240/jqkKjh4SpwliOnYGNww-1U-ddQtyMqJo0QXUudZkI3xakuYh7Y-YZReUjsyr4B4ELeym';
       const webhookUrl = localStorage.getItem('mayflower_cert_webhook_url') || defaultWebhook;
 
+      const isExamScore = scorePercentage && scorePercentage.includes('%');
+      const certDesc = isExamScore
+        ? `This log hereby certifies that [${robloxUser}](${profileUrl}) has been duly admitted to the Bar of Mayflower, passing with a score of \`\`${scorePercentage}\`\`.`
+        : `This log hereby certifies that [${robloxUser}](${profileUrl}) has been duly admitted to the Bar of Mayflower, manually certified by Executive Board.`;
+
       if (webhookUrl) {
         fetch(webhookUrl, {
           method: 'POST',
@@ -737,7 +742,7 @@
             embeds: [
               {
                 title: 'Certification Log',
-                description: `This log hereby certifies that [${robloxUser}](${profileUrl}) has been duly admitted to the Bar of Mayflower, passing with a score of \`\`${scorePercentage}\`\`.`,
+                description: certDesc,
                 color: 3046706
               }
             ]

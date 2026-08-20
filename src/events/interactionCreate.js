@@ -736,7 +736,7 @@ async function handleInteraction(interaction) {
         if (certChannel && certChannel.isTextBased()) {
           const certEmbed = new EmbedBuilder()
             .setTitle('Certification Log')
-            .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower, passing with a score of \`\`100%\`\`.`)
+            .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower, manually certified by Executive Board.`)
             .setColor('#2E7D32');
 
           await certChannel.send({ embeds: [certEmbed] });

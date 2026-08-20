@@ -120,7 +120,7 @@ app.post('/api/certify-bar', async (req, res) => {
     return res.status(400).json({ error: 'robloxUser is required' });
   }
 
-  const scoreStr = score || '79.11%';
+  const scoreStr = score || null;
 
   // Dynamically resolve Roblox User ID from username
   const robloxRes = await validateRobloxUsername(robloxUser).catch(() => ({ valid: false }));
@@ -128,6 +128,11 @@ app.post('/api/certify-bar', async (req, res) => {
   const profileUrl = robloxRes.userId
     ? `https://www.roblox.com/users/${robloxRes.userId}/profile`
     : `https://www.roblox.com/users/profile?username=${encodeURIComponent(robloxUser)}`;
+
+  const isExamScore = scoreStr && scoreStr.includes('%');
+  const certDesc = isExamScore
+    ? `This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower, passing with a score of \`\`${scoreStr}\`\`.`
+    : `This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower, manually certified by Executive Board.`;
 
   if (discordClientRef) {
     try {
@@ -137,7 +142,7 @@ app.post('/api/certify-bar', async (req, res) => {
       if (channel && channel.isTextBased()) {
         const embed = new EmbedBuilder()
           .setTitle('Certification Log')
-          .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower, passing with a score of \`\`${scoreStr}\`\`.`)
+          .setDescription(certDesc)
           .setColor('#2E7D32');
 
         await channel.send({ embeds: [embed] });
