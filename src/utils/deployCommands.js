@@ -10,18 +10,22 @@ const assignCommand = new SlashCommandBuilder()
 
 const appearCommand = new SlashCommandBuilder()
   .setName('appear')
-  .setDescription('Request an official appearance on a pending or ongoing case')
+  .setDescription('Request an official legal appearance on a pending or ongoing case')
   .addStringOption(option =>
-    option.setName('case').setDescription('Case code or channel name (e.g. CR-101)').setRequired(true)
+    option.setName('case').setDescription('Case title or code (e.g. CV-001-26 or People v. Smith)').setRequired(true)
   )
   .addStringOption(option =>
-    option.setName('party').setDescription('Your appearance party role')
+    option.setName('party').setDescription('Your formal appearance role')
       .setRequired(true)
       .addChoices(
-        { name: 'Counsel', value: 'Counsel' },
+        { name: 'Lead Counsel', value: 'Lead Counsel' },
+        { name: 'Co-Counsel / Defense Attorney', value: 'Co-Counsel / Defense Attorney' },
+        { name: 'Prosecutor / Assistant DA', value: 'Prosecutor / Assistant DA' },
+        { name: 'Plaintiff / Petitioner', value: 'Plaintiff / Petitioner' },
+        { name: 'Defendant / Respondent', value: 'Defendant / Respondent' },
         { name: 'Witness', value: 'Witness' },
-        { name: 'Other', value: 'Other' },
-        { name: 'Primary Party (Plaintiff/Prosecution/etc)', value: 'Primary Party' }
+        { name: 'Amicus Curiae (Friend of Court)', value: 'Amicus Curiae' },
+        { name: 'Party in Interest / Observer', value: 'Party in Interest' }
       )
   );
 

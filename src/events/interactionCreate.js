@@ -9,14 +9,33 @@ const {
   PermissionFlagsBits,
   ChannelType
 } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
 const config = require('../../config.json');
 const { generateAndPostTranscript } = require('../utils/transcriptGenerator');
+const { validateRobloxUsername } = require('../utils/roblox');
 
 // Temporary in-memory cache for filings data pending clerk review
 const pendingFilings = new Map();
+const COUNTERS_FILE = path.join(__dirname, '../../case_counters.json');
+
+function getCaseCounters() {
+  try {
+    if (fs.existsSync(COUNTERS_FILE)) {
+      return JSON.parse(fs.readFileSync(COUNTERS_FILE, 'utf-8'));
+    }
+  } catch (e) {}
+  return {};
+}
+
+function saveCaseCounters(counters) {
+  try {
+    fs.writeFileSync(COUNTERS_FILE, JSON.stringify(counters, null, 2), 'utf-8');
+  } catch (e) {}
+}
 
 /**
- * Generates an authentic case code (e.g. CR-101, CV-202, SW-303)
+ * Generates a sequential case code (e.g. CV-001-26, CR-001-26, EX-001-26)
  */
 function generateCaseCode(type) {
   const prefixMap = {
@@ -28,9 +47,16 @@ function generateCaseCode(type) {
     'Search Warrant': 'SW'
   };
   const prefix = prefixMap[type] || 'CS';
-  const num = String(Math.floor(100 + Math.random() * 900));
-  const yearYY = String(new Date().getFullYear()).slice(-2); // e.g. "26"
-  return `${prefix}-${num}-${yearYY}`;
+  const yearYY = String(new Date().getFullYear()).slice(-2);
+
+  const counters = getCaseCounters();
+  const key = `${prefix}-${yearYY}`;
+  const nextNum = (counters[key] || 0) + 1;
+  counters[key] = nextNum;
+  saveCaseCounters(counters);
+
+  const paddedNum = String(nextNum).padStart(3, '0');
+  return `${prefix}-${paddedNum}-${yearYY}`;
 }
 
 /**
@@ -77,17 +103,21 @@ async function handleInteraction(interaction) {
         const partyType = interaction.options.getString('party', true);
         const applicant = interaction.user;
 
-        const requestId = `appear_${Date.now()}`;
-
         const embed = new EmbedBuilder()
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
-          .setTitle('Appearance Request')
-          .setDescription(`<@${applicant.id}> (${applicant.username}) is requesting to appear as **${partyType}** on **${caseCodeStr}**`)
-          .setColor('#6B21A8');
+          .setTitle('Notice of Formal Legal Appearance')
+          .setColor('#6B21A8')
+          .addFields(
+            { name: 'Applicant Attorney / Party', value: `<@${applicant.id}> (${applicant.username})`, inline: true },
+            { name: 'Appearance Role', value: partyType, inline: true },
+            { name: 'Case Reference', value: caseCodeStr, inline: true },
+            { name: 'Status', value: 'Pending Judicial Authorization', inline: false }
+          )
+          .setFooter({ text: 'State of Mayflower Judicial Branch' });
 
         const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`appear_approve_${applicant.id}_${interaction.channelId}`).setLabel('Approve').setStyle(ButtonStyle.Success),
-          new ButtonBuilder().setCustomId(`appear_deny_${applicant.id}`).setLabel('Deny').setStyle(ButtonStyle.Danger)
+          new ButtonBuilder().setCustomId(`appear_approve_${applicant.id}`).setLabel('Approve Appearance').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId(`appear_deny_${applicant.id}`).setLabel('Deny Appearance').setStyle(ButtonStyle.Danger)
         );
 
         await interaction.reply({ embeds: [embed], components: [row] });
@@ -286,7 +316,13 @@ async function handleInteraction(interaction) {
         const categoryId = config.pendingCasesCategoryId;
         const guild = interaction.guild;
 
-        let newChannelName = `${caseCode.toLowerCase()}-${(data.defendant || data.respondent || 'case').toLowerCase().replace(/[^a-z0-9]/g, '')}`.substring(0, 30);
+        // Channel Naming Format: partyA-v-partyB (e.g. people-v-smith or john-v-doe)
+        let partyA = 'people';
+        if (data.type !== 'Criminal') {
+          partyA = (data.petitioner || data.applicant.username || 'petitioner').toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+        let partyB = (data.defendant || data.respondent || 'respondent').toLowerCase().replace(/[^a-z0-9]/g, '');
+        let newChannelName = `${partyA}-v-${partyB}`.substring(0, 32);
 
         // Create case channel in Pending Cases Category
         const caseChannel = await guild.channels.create({
@@ -303,7 +339,7 @@ async function handleInteraction(interaction) {
         try {
           const applicantMember = await guild.members.fetch(data.applicant.id).catch(() => null);
           if (applicantMember) {
-            await applicantMember.send(`case approved #${caseCode} (<#${caseChannel.id}>)`).catch(() => null);
+            await applicantMember.send(`case approved <#${caseChannel.id}>`).catch(() => null);
           }
         } catch (e) {}
 
@@ -361,8 +397,7 @@ async function handleInteraction(interaction) {
       // Appearance Request Approval
       if (customId.startsWith('appear_approve_')) {
         await interaction.deferUpdate();
-        const parts = customId.split('_');
-        const applicantId = parts[2];
+        const applicantId = customId.replace('appear_approve_', '');
 
         // Grant channel permissions
         if (interaction.channel) {
@@ -374,7 +409,9 @@ async function handleInteraction(interaction) {
         }
 
         const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-          .setFooter({ text: `Approved by ${interaction.user.username}` });
+          .setColor('#2E7D32')
+          .spliceFields(3, 1, { name: 'Status', value: `Approved by Hon. ${interaction.user.username}`, inline: false })
+          .setFooter({ text: `Approved by Hon. ${interaction.user.username}` });
 
         await interaction.message.edit({ embeds: [origEmbed], components: [] });
         return;
@@ -384,7 +421,9 @@ async function handleInteraction(interaction) {
       if (customId.startsWith('appear_deny_')) {
         await interaction.deferUpdate();
         const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-          .setFooter({ text: `Denied by ${interaction.user.username}` });
+          .setColor('#C62828')
+          .spliceFields(3, 1, { name: 'Status', value: `Denied by Hon. ${interaction.user.username}`, inline: false })
+          .setFooter({ text: `Denied by Hon. ${interaction.user.username}` });
 
         await interaction.message.edit({ embeds: [origEmbed], components: [] });
         return;
