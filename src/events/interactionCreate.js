@@ -301,7 +301,7 @@ async function handleInteraction(interaction) {
         return;
       }
 
-      // Clerk Approval Interaction
+        // Clerk Approval Interaction
       if (customId.startsWith('clerk_approve_')) {
         await interaction.deferUpdate();
         const filingId = customId.replace('clerk_approve_', '');
@@ -313,10 +313,44 @@ async function handleInteraction(interaction) {
         }
 
         const caseCode = generateCaseCode(data.type);
-        const categoryId = config.pendingCasesCategoryId;
         const guild = interaction.guild;
 
-        // Channel Naming Format: partyA-v-partyB (e.g. people-v-smith or john-v-doe)
+        // Check if Warrant vs Court Case
+        const isWarrant = data.type === 'Arrest Warrant' || data.type === 'Search Warrant';
+
+        if (isWarrant) {
+          // Warrants: Processed as standalone Judicial Warrant Authorizations (no case channel created)
+          const warrantEmbed = new EmbedBuilder()
+            .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
+            .setTitle(`Judicial Warrant Issued: ${data.type}`)
+            .setColor('#2E7D32')
+            .addFields(
+              { name: 'Warrant Control Code', value: caseCode, inline: true },
+              { name: 'Warrant Type', value: data.type, inline: true },
+              { name: 'Subject / Target', value: data.defendant || 'N/A', inline: true },
+              { name: 'Affiant / Applicant', value: `<@${data.applicant.id}>`, inline: true },
+              { name: 'Issuing Judicial Officer', value: `Hon. <@${interaction.user.id}>`, inline: true },
+              { name: 'Status', value: 'ACTIVE / EXECUTABLE WARRANT', inline: true },
+              { name: 'Affidavit & Probable Cause', value: `[Filing Affidavit](${data.filingLink})`, inline: false }
+            )
+            .setFooter({ text: 'State of Mayflower Judicial Branch • Official Warrant Authorization' });
+
+          await interaction.message.edit({ embeds: [warrantEmbed], components: [] });
+
+          // Direct DM notification to affiant officer
+          try {
+            const applicantMember = await guild.members.fetch(data.applicant.id).catch(() => null);
+            if (applicantMember) {
+              await applicantMember.send(`warrant approved ${data.type} [${caseCode}] for target "${data.defendant}".`).catch(() => null);
+            }
+          } catch (e) {}
+
+          pendingFilings.delete(filingId);
+          return;
+        }
+
+        // Court Cases: Create case channel in Pending Cases Category
+        const categoryId = config.pendingCasesCategoryId;
         let partyA = 'people';
         if (data.type !== 'Criminal') {
           partyA = (data.petitioner || data.applicant.username || 'petitioner').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -324,7 +358,6 @@ async function handleInteraction(interaction) {
         let partyB = (data.defendant || data.respondent || 'respondent').toLowerCase().replace(/[^a-z0-9]/g, '');
         let newChannelName = `${partyA}-v-${partyB}`.substring(0, 32);
 
-        // Create case channel in Pending Cases Category
         const caseChannel = await guild.channels.create({
           name: newChannelName,
           type: ChannelType.GuildText,
