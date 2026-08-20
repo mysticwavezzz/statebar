@@ -14,6 +14,11 @@ const path = require('path');
 const config = require('../../config.json');
 const { generateAndPostTranscript } = require('../utils/transcriptGenerator');
 const { validateRobloxUsername } = require('../utils/roblox');
+const {
+  startDmExamSession,
+  sendNextDmExamQuestion,
+  handleDmExamAnswer
+} = require('../utils/dmExamManager');
 
 // Temporary in-memory cache for filings data pending clerk review
 const pendingFilings = new Map();
@@ -242,23 +247,34 @@ async function handleInteraction(interaction) {
     if (interaction.isButton()) {
       const { customId } = interaction;
 
-      // State Bar Portal: Take Exam via DMs
+      // DM Exam Question Answer Buttons: dm_exam_ans_{qIndex}_{choice}
+      if (customId.startsWith('dm_exam_ans_')) {
+        const parts = customId.split('_');
+        const qIndex = parseInt(parts[3], 10);
+        const selectedChoice = parts[4];
+        await handleDmExamAnswer(interaction, qIndex, selectedChoice);
+        return;
+      }
+
+      // State Bar Portal: Take Exam via DMs (Auto-fills Discord Tag)
       if (customId === 'bar_exam_via_dms') {
+        const discordTag = interaction.user.tag || interaction.user.username;
         const modal = new ModalBuilder().setCustomId('bar_exam_dm_modal').setTitle('State Bar Exam Registration');
         modal.addComponents(
           new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('roblox_user').setLabel('Roblox Username').setStyle(TextInputStyle.Short).setRequired(true)),
-          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('discord_user').setLabel('Discord Username').setStyle(TextInputStyle.Short).setRequired(true))
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('discord_user').setLabel('Discord Username').setValue(discordTag).setStyle(TextInputStyle.Short).setRequired(true))
         );
         await interaction.showModal(modal);
         return;
       }
 
-      // State Bar Portal: Transfer via DMs
+      // State Bar Portal: Transfer via DMs (Auto-fills Discord Tag)
       if (customId === 'bar_transfer_via_dms') {
+        const discordTag = interaction.user.tag || interaction.user.username;
         const modal = new ModalBuilder().setCustomId('bar_transfer_dm_modal').setTitle('Reciprocal Bar Transfer Application');
         modal.addComponents(
           new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('roblox_user').setLabel('Roblox Username').setStyle(TextInputStyle.Short).setRequired(true)),
-          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('discord_user').setLabel('Discord Username').setStyle(TextInputStyle.Short).setRequired(true)),
+          new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('discord_user').setLabel('Discord Username').setValue(discordTag).setStyle(TextInputStyle.Short).setRequired(true)),
           new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('state_from').setLabel('State / Jurisdiction From').setPlaceholder('e.g. State of Firestone').setStyle(TextInputStyle.Short).setRequired(true)),
           new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('evidence').setLabel('Proof / Evidence of Active Certification').setPlaceholder('Link to bar license certificate...').setStyle(TextInputStyle.Paragraph).setRequired(true))
         );
@@ -325,7 +341,7 @@ async function handleInteraction(interaction) {
         return;
       }
 
-        // Clerk Approval Interaction
+      // Clerk Approval Interaction
       if (customId.startsWith('clerk_approve_')) {
         await interaction.deferUpdate();
         const filingId = customId.replace('clerk_approve_', '');
@@ -339,11 +355,43 @@ async function handleInteraction(interaction) {
         const caseCode = generateCaseCode(data.type);
         const guild = interaction.guild;
 
-        // Check if Warrant vs Court Case
+        // Check if Warrant vs Court Case vs Bar Application
         const isWarrant = data.type === 'Arrest Warrant' || data.type === 'Search Warrant';
+        const isBarApp = data.type === 'Bar Transfer' || data.type === 'Bar Exam Result';
+
+        if (isBarApp) {
+          // Bar Applications: Issue Certification Log in channel 1539839511544991785
+          const robloxRes = await validateRobloxUsername(data.petitioner || data.robloxUser).catch(() => ({ valid: false }));
+          const resolvedUsername = robloxRes.username || data.petitioner || data.robloxUser;
+          const profileUrl = robloxRes.userId
+            ? `https://www.roblox.com/users/${robloxRes.userId}/profile`
+            : `https://www.roblox.com/users/profile?username=${encodeURIComponent(resolvedUsername)}`;
+
+          const scoreStr = (data.stateFrom || '').match(/(\d+%)|(\d+\.\d+%)/)?.[0] || '100%';
+
+          const logChannelId = config.stateBarCertLogChannelId;
+          const logChannel = await interaction.client.channels.fetch(logChannelId).catch(() => null);
+
+          if (logChannel && logChannel.isTextBased()) {
+            const embed = new EmbedBuilder()
+              .setTitle('Certification Log')
+              .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Harrison County, passing with a score of \`\`${scoreStr}\`\`.`)
+              .setColor('#2E7D32');
+
+            await logChannel.send({ embeds: [embed] });
+          }
+
+          const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+            .setColor('#2E7D32')
+            .addFields({ name: 'Status', value: `Admitted by Executive <@${interaction.user.id}>` });
+
+          await interaction.message.edit({ embeds: [origEmbed], components: [] });
+          pendingFilings.delete(filingId);
+          return;
+        }
 
         if (isWarrant) {
-          // Warrants: Processed as standalone Judicial Warrant Authorizations (no case channel created)
+          // Warrants: Processed as standalone Judicial Warrant Authorizations
           const warrantEmbed = new EmbedBuilder()
             .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
             .setTitle(`Judicial Warrant Issued: ${data.type}`)
@@ -361,7 +409,6 @@ async function handleInteraction(interaction) {
 
           await interaction.message.edit({ embeds: [warrantEmbed], components: [] });
 
-          // Direct DM notification to affiant officer
           try {
             const applicantMember = await guild.members.fetch(data.applicant.id).catch(() => null);
             if (applicantMember) {
@@ -443,7 +490,7 @@ async function handleInteraction(interaction) {
           try {
             const applicantMember = await interaction.guild.members.fetch(data.applicant.id).catch(() => null);
             if (applicantMember) {
-              await applicantMember.send(`Your filing for ${data.type} was denied by court clerks.`).catch(() => null);
+              await applicantMember.send(`Your filing/application for ${data.type} was denied by court clerks/executives.`).catch(() => null);
             }
           } catch (e) {}
         }
@@ -456,7 +503,6 @@ async function handleInteraction(interaction) {
         await interaction.deferUpdate();
         const applicantId = customId.replace('appear_approve_', '');
 
-        // Grant channel permissions
         if (interaction.channel) {
           await interaction.channel.permissionOverwrites.create(applicantId, {
             ViewChannel: true,
@@ -493,19 +539,19 @@ async function handleInteraction(interaction) {
     if (interaction.isModalSubmit()) {
       const { customId } = interaction;
 
-      // State Bar Exam DM Modal
+      // State Bar Exam DM Modal -> Starts Interactive Question-by-Question Exam
       if (customId === 'bar_exam_dm_modal') {
         await interaction.deferReply({ ephemeral: true });
         const robloxUser = interaction.fields.getTextInputValue('roblox_user').trim();
 
+        const session = startDmExamSession(interaction.user, robloxUser);
+
         try {
-          await interaction.user.send({
-            content: `Welcome to the Official State Bar Examination, Candidate **${robloxUser}**!\n\nTo enter the secure testing environment and take your 25-Question Statutory Examination, click the link below:\n👉 https://mysticwavezzz.github.io/statebar/`
-          });
-          await interaction.editReply({ content: `Exam access link sent! Please check your Direct Messages (<@${interaction.user.id}>).` });
+          await sendNextDmExamQuestion(interaction.user, interaction);
+          await interaction.editReply({ content: `Exam session initiated! Please check your Direct Messages (<@${interaction.user.id}>) to begin Question 1 of 25.` });
         } catch (err) {
           await interaction.editReply({
-            content: `Notice: Could not send DM. Please enable Direct Messages from server members, or take the exam directly on the website:\n👉 https://mysticwavezzz.github.io/statebar/`
+            content: `Notice: Could not send DM to candidate. Please enable Direct Messages from server members, or take the exam directly on the website:\n👉 https://mysticwavezzz.github.io/statebar/`
           });
         }
         return;
@@ -543,7 +589,7 @@ async function handleInteraction(interaction) {
             .setColor('#6B21A8')
             .addFields(
               { name: 'Roblox Username', value: robloxUser, inline: true },
-              { name: 'Discord Handle', value: discordUser, inline: true },
+              { name: 'Discord Handle', value: `@${discordUser}`, inline: true },
               { name: 'State / Jurisdiction From', value: stateFrom, inline: true },
               { name: 'Proof of Active License', value: `[License Evidence Link](${evidence})`, inline: false }
             )
@@ -604,7 +650,6 @@ async function handleInteraction(interaction) {
 
         pendingFilings.set(filingId, filingData);
 
-        // Send Embed to Clerk Review Channel (1538067231236161616)
         const clerkChannelId = config.clerkReviewChannelId;
         const clerkChannel = await interaction.client.channels.fetch(clerkChannelId).catch(() => null);
 
