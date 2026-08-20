@@ -364,6 +364,7 @@
               <span style="color: #666; font-size: 10px; margin-left: 6px;">Review and Accept or Deny candidate admissions</span>
             </div>
             <div style="display: flex; gap: 6px;">
+              <button class="win-button" style="background: #f8d7da; border-color: #f5c6cb; color: #721c24; font-weight: bold;" onclick="clearAllDatabaseLogs()">[ Purge All Database Logs ]</button>
               <button class="win-button" onclick="seedSampleData()">+ Load Sample Submissions</button>
               <button class="win-button" onclick="renderApplicationsTable()">Refresh List</button>
             </div>
@@ -521,6 +522,21 @@
 
     function notifyStorageChange() {
       window.dispatchEvent(new Event('storage'));
+    }
+
+    function clearAllDatabaseLogs() {
+      if (confirm("DANGER: Are you sure you want to PURGE ALL DATABASE LOGS?\n\nThis will permanently delete:\n• All Pending Applications & Exam Results\n• All Stored Bar Roster Attorneys\n• All Device Lock Flags\n\nThis action cannot be undone.")) {
+        localStorage.setItem(STORAGE_KEY_APPS, JSON.stringify([]));
+        localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify([]));
+        localStorage.removeItem('mayflower_user_exam_submitted');
+        localStorage.removeItem('mayflower_user_transfer_submitted');
+        
+        notifyStorageChange();
+        renderApplicationsTable();
+        renderRosterTable();
+
+        alert("DATABASE PURGED: All application logs, roster records, and submission locks have been cleared.");
+      }
     }
 
     // Helper: Generate authentic 10-digit Bar License Number
