@@ -401,9 +401,12 @@ async function handleInteraction(interaction) {
             await logChannel.send({ embeds: [embed] });
           }
 
+          // Auto-add candidate to official Bar Roster
+          const newLicense = addBarLicense(resolvedUsername);
+
           const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
             .setColor('#2E7D32')
-            .addFields({ name: 'Status', value: `Admitted by Executive <@${interaction.user.id}>` });
+            .addFields({ name: 'Status', value: `Admitted by Executive <@${interaction.user.id}> | SBN: \`${newLicense.sbn}\`` });
 
           await interaction.message.edit({ embeds: [origEmbed], components: [] });
           pendingFilings.delete(filingId);

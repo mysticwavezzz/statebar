@@ -702,6 +702,18 @@
       });
       saveRoster(roster);
 
+      // Sync roster entry to backend / roster.json (for Discord auto-sync)
+      fetch('http://localhost:3000/api/sync-roster', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: app.robloxUser,
+          sbn: generatedSBN,
+          status: selectedStatus,
+          date: dateStr
+        })
+      }).catch(() => {});
+
       // Update application
       app.status = 'Accepted';
       app.sbn = generatedSBN;

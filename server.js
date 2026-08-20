@@ -33,6 +33,20 @@ app.get('/database.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'database.html'));
 });
 
+const { getRoster, saveRoster, addBarLicense } = require('./src/utils/rosterStore');
+
+app.get('/api/roster', (req, res) => {
+  res.json(getRoster());
+});
+
+app.post('/api/sync-roster', (req, res) => {
+  const { name, sbn, status } = req.body;
+  if (!name) return res.status(400).json({ error: 'Name required' });
+
+  const entry = addBarLicense(name, sbn, status || 'Active');
+  res.json({ success: true, entry });
+});
+
 // API Endpoint to send Bar Certification Log embed to Discord Channel 1539839511544991785
 app.post('/api/certify-bar', async (req, res) => {
   const { robloxUser, score } = req.body;
