@@ -6,12 +6,11 @@ const ROSTER_FILE = path.join(__dirname, '../../roster.json');
 function getRoster() {
   try {
     if (fs.existsSync(ROSTER_FILE)) {
-      return JSON.parse(fs.readFileSync(ROSTER_FILE, 'utf-8'));
+      const data = JSON.parse(fs.readFileSync(ROSTER_FILE, 'utf-8'));
+      if (Array.isArray(data)) return data;
     }
   } catch (e) {}
-  return [
-    { name: "Tyler_R", sbn: "8492018492", status: "Active", date: "08/19/2026" }
-  ];
+  return [];
 }
 
 function saveRoster(roster) {
