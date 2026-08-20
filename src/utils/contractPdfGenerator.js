@@ -37,7 +37,7 @@ function generateContractPDF(contractData, outputPath) {
       .text(`Dear, ${contractData.clientName}`);
     doc.moveDown(0.5);
     doc.text(
-      'Thank you for choosing the Law Office of Mystic. This letter confirms the terms of our engagement. Please be advised that M_ysticWavezzz (myself) is a fully admitted and ratified attorney authorized to practice unconditionally before the 7th Judicial Circuit of Harrison County. All representation is provided in accordance with the Local Rules of the Chesapeake County Court for the County of Harrison.'
+      'Thank you for choosing the Law Office of Mystic. This letter confirms the terms of our engagement. Please be advised that M_ysticWavezzz (myself) is a fully admitted and ratified attorney authorized to practice unconditionally before the District Courts of the State of Mayflower. All representation is provided in accordance with the Local Rules of the State of Mayflower.'
     );
     doc.moveDown(0.8);
 

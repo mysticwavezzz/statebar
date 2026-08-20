@@ -58,7 +58,7 @@ app.post('/api/certify-bar', async (req, res) => {
       if (channel && channel.isTextBased()) {
         const embed = new EmbedBuilder()
           .setTitle('Certification Log')
-          .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Harrison County, passing with a score of \`\`${scoreStr}\`\`.`)
+          .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower, passing with a score of \`\`${scoreStr}\`\`.`)
           .setColor('#2E7D32');
 
         await channel.send({ embeds: [embed] });

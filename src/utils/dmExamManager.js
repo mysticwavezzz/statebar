@@ -434,7 +434,7 @@ async function finalizeDmExam(user, session, interaction) {
 
     if (clerkChannel && clerkChannel.isTextBased()) {
       const clerkEmbed = new EmbedBuilder()
-        .setAuthor({ name: 'State Bar of Harrison County', iconURL: clerkChannel.guild ? clerkChannel.guild.iconURL() : undefined })
+        .setAuthor({ name: 'State Bar of Mayflower', iconURL: clerkChannel.guild ? clerkChannel.guild.iconURL() : undefined })
         .setTitle('State Bar Examination Result (DM Submission)')
         .setColor('#6B21A8')
         .addFields(

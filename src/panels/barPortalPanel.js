@@ -8,7 +8,7 @@ const config = require('../../config.json');
 function getBarPortalPanel(guildIconUrl) {
   const embed = new EmbedBuilder()
     .setAuthor({
-      name: 'State Bar of Harrison County',
+      name: 'State Bar of Mayflower',
       iconURL: guildIconUrl || undefined
     })
     .setTitle('Bar Admission & Reciprocal Transfer Portal')
@@ -26,7 +26,7 @@ function getBarPortalPanel(guildIconUrl) {
         inline: false
       }
     )
-    .setFooter({ text: 'State Bar of Harrison County • Executive Review Board' });
+    .setFooter({ text: 'State Bar of Mayflower • Executive Review Board' });
 
   const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()

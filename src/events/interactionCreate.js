@@ -230,7 +230,7 @@ async function handleInteraction(interaction) {
         if (logChannel && logChannel.isTextBased()) {
           const embed = new EmbedBuilder()
             .setTitle('Certification Log')
-            .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Harrison County, passing with a score of \`\`${score}\`\`.`)
+            .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower, passing with a score of \`\`${score}\`\`.`)
             .setColor('#2E7D32');
 
           await logChannel.send({ embeds: [embed] });
@@ -292,7 +292,7 @@ async function handleInteraction(interaction) {
           : '*No active bar licenses recorded.*';
 
         const embed = new EmbedBuilder()
-          .setAuthor({ name: 'State Bar of Harrison County', iconURL: guildIcon || undefined })
+          .setAuthor({ name: 'State Bar of Mayflower', iconURL: guildIcon || undefined })
           .setTitle('Official Attorney Bar Roster')
           .setColor('#6B21A8')
           .setDescription(`Total Admitted Attorneys: **${roster.length}**\n\n${rosterFormatted}`)
@@ -395,7 +395,7 @@ async function handleInteraction(interaction) {
           if (logChannel && logChannel.isTextBased()) {
             const embed = new EmbedBuilder()
               .setTitle('Certification Log')
-              .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Harrison County, passing with a score of \`\`${scoreStr}\`\`.`)
+              .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower, passing with a score of \`\`${scoreStr}\`\`.`)
               .setColor('#2E7D32');
 
             await logChannel.send({ embeds: [embed] });
@@ -477,7 +477,7 @@ async function handleInteraction(interaction) {
             { name: 'Case Code', value: caseCode, inline: true },
             { name: 'Prosecution', value: data.type === 'Criminal' ? 'People' : (data.petitioner || 'N/A'), inline: true },
             { name: 'Defendant', value: data.defendant || data.respondent || 'N/A', inline: true },
-            { name: 'Prosecuting Office', value: "Harrison County District Attorney's Office (HCDAO)", inline: true },
+            { name: 'Prosecuting Office', value: "Mayflower Department of Justice (DOJ)", inline: true },
             { name: 'Filed By', value: `<@${data.applicant.id}>`, inline: true },
             { name: 'Filing', value: `[Filing](${data.filingLink})`, inline: false }
           );
@@ -604,7 +604,7 @@ async function handleInteraction(interaction) {
 
         if (clerkChannel && clerkChannel.isTextBased()) {
           const clerkEmbed = new EmbedBuilder()
-            .setAuthor({ name: 'State Bar of Harrison County', iconURL: guildIcon || undefined })
+            .setAuthor({ name: 'State Bar of Mayflower', iconURL: guildIcon || undefined })
             .setTitle('Reciprocal Bar Transfer Application')
             .setColor('#6B21A8')
             .addFields(
