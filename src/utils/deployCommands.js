@@ -1,4 +1,4 @@
-const { REST, Routes, SlashCommandBuilder } = require('discord.js');
+const { REST, Routes, SlashCommandBuilder, ChannelType } = require('discord.js');
 const config = require('../../config.json');
 
 const assignCommand = new SlashCommandBuilder()
@@ -11,8 +11,11 @@ const assignCommand = new SlashCommandBuilder()
 const appearCommand = new SlashCommandBuilder()
   .setName('appear')
   .setDescription('Request an official legal appearance on a pending or ongoing case')
-  .addStringOption(option =>
-    option.setName('case').setDescription('Case title or code (e.g. CV-001-26 or People v. Smith)').setRequired(true)
+  .addChannelOption(option =>
+    option.setName('case')
+      .setDescription('Select case channel (#partyA-v-partyB)')
+      .addChannelTypes(ChannelType.GuildText)
+      .setRequired(true)
   )
   .addStringOption(option =>
     option.setName('party').setDescription('Your formal appearance role')

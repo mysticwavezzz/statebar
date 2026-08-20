@@ -98,7 +98,8 @@ async function handleInteraction(interaction) {
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Case Assigned')
           .setDescription(`This case has been assigned to <@${targetUser.id}>.`)
-          .setColor('#6B21A8');
+          .setColor('#6B21A8')
+          .setFooter({ text: `Executed by Hon. ${interaction.user.username}` });
 
         await interaction.reply({ embeds: [embed] });
         return;
@@ -106,18 +107,19 @@ async function handleInteraction(interaction) {
 
       // B. /appear case: party:
       if (commandName === 'appear') {
-        const caseCodeStr = interaction.options.getString('case', true);
+        const caseChannel = interaction.options.getChannel('case', true);
         const partyType = interaction.options.getString('party', true);
         const applicant = interaction.user;
 
         const embed = new EmbedBuilder()
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Appearance Request')
-          .setDescription(`<@${applicant.id}> (${applicant.username}) is requesting to appear as **${partyType}** on **${caseCodeStr}**`)
-          .setColor('#6B21A8');
+          .setDescription(`<@${applicant.id}> (${applicant.username}) is requesting to appear as **${partyType}** on <#${caseChannel.id}>`)
+          .setColor('#6B21A8')
+          .setFooter({ text: `Requested by ${applicant.username}` });
 
         const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`appear_approve_${applicant.id}`).setLabel('Approve').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId(`appear_approve_${applicant.id}_${caseChannel.id}`).setLabel('Approve').setStyle(ButtonStyle.Success),
           new ButtonBuilder().setCustomId(`appear_deny_${applicant.id}`).setLabel('Deny').setStyle(ButtonStyle.Danger)
         );
 
@@ -141,8 +143,9 @@ async function handleInteraction(interaction) {
         const embed = new EmbedBuilder()
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Document Filed')
-          .setDescription(`**Title:** ${title}\n\n${linksFormatted.length > 0 ? linksFormatted.join(' | ') : '*No external link provided*'}\n\n**Executor:** ${executor.username}`)
-          .setColor('#6B21A8');
+          .setDescription(`**Title:** ${title}\n\n${linksFormatted.length > 0 ? linksFormatted.join(' | ') : '*No external link provided*'}`)
+          .setColor('#6B21A8')
+          .setFooter({ text: `Executed by ${executor.username}` });
 
         await interaction.reply({ embeds: [embed] });
         return;
@@ -164,8 +167,9 @@ async function handleInteraction(interaction) {
         const embed = new EmbedBuilder()
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Judicial Ruling Issued')
-          .setDescription(`**Title:** ${title}\n\n${linksFormatted.length > 0 ? linksFormatted.join(' | ') : '*No external link provided*'}\n\n**Executor:** ${executor.username}`)
-          .setColor('#6B21A8');
+          .setDescription(`**Title:** ${title}\n\n${linksFormatted.length > 0 ? linksFormatted.join(' | ') : '*No external link provided*'}`)
+          .setColor('#6B21A8')
+          .setFooter({ text: `Executed by Hon. ${executor.username}` });
 
         await interaction.reply({ embeds: [embed] });
         return;
@@ -226,7 +230,8 @@ async function handleInteraction(interaction) {
           const embed = new EmbedBuilder()
             .setTitle('Certification Log')
             .setDescription(`This log hereby certifies that [${resolvedUsername}](${profileUrl}) has been duly admitted to the Bar of Mayflower, passing with a score of \`\`${score}\`\`.`)
-            .setColor('#2E7D32');
+            .setColor('#2E7D32')
+            .setFooter({ text: `Certified by Executive ${interaction.user.username}` });
 
           await logChannel.send({ embeds: [embed] });
           await interaction.editReply({ content: `Successfully posted certification log for ${resolvedUsername} to <#${logChannelId}>` });
@@ -586,14 +591,19 @@ async function handleInteraction(interaction) {
       // Appearance Request Approval
       if (customId.startsWith('appear_approve_')) {
         await interaction.deferUpdate();
-        const applicantId = customId.replace('appear_approve_', '');
+        const parts = customId.split('_');
+        const applicantId = parts[2];
+        const targetChannelId = parts[3] || (interaction.channel ? interaction.channel.id : null);
 
-        if (interaction.channel) {
-          await interaction.channel.permissionOverwrites.create(applicantId, {
-            ViewChannel: true,
-            SendMessages: true,
-            ReadMessageHistory: true
-          }).catch(e => console.warn(`[Appear Perms Warning]: ${e.message}`));
+        if (targetChannelId) {
+          const targetChannel = await interaction.client.channels.fetch(targetChannelId).catch(() => null);
+          if (targetChannel && targetChannel.isTextBased()) {
+            await targetChannel.permissionOverwrites.create(applicantId, {
+              ViewChannel: true,
+              SendMessages: true,
+              ReadMessageHistory: true
+            }).catch(e => console.warn(`[Appear Perms Warning]: ${e.message}`));
+          }
         }
 
         const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
