@@ -564,27 +564,24 @@ async function handleInteraction(interaction) {
         return;
       }
 
-      // Clerk Denial Interaction
+      // Clerk Denial Interaction (Shows Modal for Denial Reason)
       if (customId.startsWith('clerk_deny_')) {
-        await interaction.deferUpdate();
         const filingId = customId.replace('clerk_deny_', '');
-        const data = pendingFilings.get(filingId);
+        const modal = new ModalBuilder()
+          .setCustomId(`clerk_deny_modal_${filingId}`)
+          .setTitle('Denial Reason Required');
 
-        const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-          .setColor('#C62828')
-          .addFields({ name: 'Status', value: `Denied by <@${interaction.user.id}>` });
-
-        await interaction.message.edit({ embeds: [origEmbed], components: [] });
-
-        if (data && data.applicant) {
-          try {
-            const applicantMember = await interaction.guild.members.fetch(data.applicant.id).catch(() => null);
-            if (applicantMember) {
-              await applicantMember.send(`Your filing/application for ${data.type} was denied by court clerks/executives.`).catch(() => null);
-            }
-          } catch (e) {}
-        }
-        pendingFilings.delete(filingId);
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('reason')
+              .setLabel('Reason for Denial')
+              .setPlaceholder('State the legal or procedural reason for denial...')
+              .setStyle(TextInputStyle.Paragraph)
+              .setRequired(true)
+          )
+        );
+        await interaction.showModal(modal);
         return;
       }
 
@@ -614,14 +611,24 @@ async function handleInteraction(interaction) {
         return;
       }
 
-      // Appearance Request Denial
+      // Appearance Request Denial (Shows Modal for Denial Reason)
       if (customId.startsWith('appear_deny_')) {
-        await interaction.deferUpdate();
-        const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-          .setColor('#C62828')
-          .setFooter({ text: `Denied by Hon. ${interaction.user.username}` });
+        const applicantId = customId.replace('appear_deny_', '');
+        const modal = new ModalBuilder()
+          .setCustomId(`appear_deny_modal_${applicantId}`)
+          .setTitle('Appearance Denial Reason Required');
 
-        await interaction.message.edit({ embeds: [origEmbed], components: [] });
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('reason')
+              .setLabel('Reason for Denying Appearance')
+              .setPlaceholder('Specify why the appearance request was denied...')
+              .setStyle(TextInputStyle.Paragraph)
+              .setRequired(true)
+          )
+        );
+        await interaction.showModal(modal);
         return;
       }
     }
@@ -803,6 +810,73 @@ async function handleInteraction(interaction) {
         }
 
         await interaction.editReply({ content: `SUCCESS: Attorney removed from Bar Roster.` });
+        return;
+      }
+
+      // Modal Submit: Clerk Denial Reason
+      if (customId.startsWith('clerk_deny_modal_')) {
+        await interaction.deferUpdate();
+        const filingId = customId.replace('clerk_deny_modal_', '');
+        const reason = interaction.fields.getTextInputValue('reason').trim();
+        const data = pendingFilings.get(filingId);
+
+        const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+          .setColor('#C62828')
+          .addFields(
+            { name: 'Status', value: `Denied by Hon. <@${interaction.user.id}>` },
+            { name: 'Denial Reason', value: reason, inline: false }
+          )
+          .setFooter({ text: `Denied by Hon. ${interaction.user.username}` });
+
+        await interaction.message.edit({ embeds: [origEmbed], components: [] });
+
+        if (data && data.applicant) {
+          try {
+            const applicantUser = data.applicant;
+            const dmEmbed = new EmbedBuilder()
+              .setAuthor({ name: 'State of Mayflower Judicial Branch' })
+              .setTitle('Notice of Denial')
+              .setColor('#C62828')
+              .addFields(
+                { name: 'Filing / Application Type', value: data.type || 'Court Filing', inline: true },
+                { name: 'Denial Reason', value: reason, inline: false }
+              )
+              .setFooter({ text: `Issued by Hon. ${interaction.user.username}` });
+
+            await applicantUser.send({ embeds: [dmEmbed] }).catch(() => null);
+          } catch (e) {}
+        }
+
+        pendingFilings.delete(filingId);
+        return;
+      }
+
+      // Modal Submit: Appearance Request Denial Reason
+      if (customId.startsWith('appear_deny_modal_')) {
+        await interaction.deferUpdate();
+        const applicantId = customId.replace('appear_deny_modal_', '');
+        const reason = interaction.fields.getTextInputValue('reason').trim();
+
+        const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+          .setColor('#C62828')
+          .addFields({ name: 'Denial Reason', value: reason, inline: false })
+          .setFooter({ text: `Denied by Hon. ${interaction.user.username}` });
+
+        await interaction.message.edit({ embeds: [origEmbed], components: [] });
+
+        try {
+          const user = await interaction.client.users.fetch(applicantId).catch(() => null);
+          if (user) {
+            const dmEmbed = new EmbedBuilder()
+              .setAuthor({ name: 'State of Mayflower District Courts' })
+              .setTitle('Appearance Request Denied')
+              .setColor('#C62828')
+              .setDescription(`Your request to appear has been **Denied**.\n\n**Reason:** ${reason}`)
+              .setFooter({ text: `Issued by Hon. ${interaction.user.username}` });
+
+            await user.send({ embeds: [dmEmbed] }).catch(() => null);
+          }
+        } catch (e) {}
         return;
       }
 
