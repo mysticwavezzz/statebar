@@ -593,10 +593,13 @@
           <td>${app.date}</td>
           <td><span class="badge-status ${statusBadgeClass}">${escapeHTML(app.status)}</span></td>
           <td style="text-align: center;">
-            ${app.status === 'Pending Review' || !app.status ? `
-              <button class="win-button btn-success" style="font-size: 10px; padding: 2px 6px;" onclick="acceptApplication(${idx})">Accept</button>
-              <button class="win-button btn-danger" style="font-size: 10px; padding: 2px 6px;" onclick="denyApplication(${idx})">Deny</button>
-            ` : `<span style="font-size: 10px; color: #555;">${app.sbn ? `SBN: ${app.sbn}` : 'Processed'}</span>`}
+            <div style="display: flex; gap: 3px; justify-content: center;">
+              ${app.status === 'Pending Review' || !app.status ? `
+                <button class="win-button btn-success" style="font-size: 10px; padding: 2px 6px;" onclick="acceptApplication(${idx})">Accept</button>
+                <button class="win-button btn-danger" style="font-size: 10px; padding: 2px 6px;" onclick="denyApplication(${idx})">Deny</button>
+              ` : `<span style="font-size: 10px; color: #555; align-self: center;">${app.sbn ? `SBN: ${app.sbn}` : 'Processed'}</span>`}
+              <button class="win-button" style="font-size: 10px; padding: 2px 5px; color: #721c24; background: #f8d7da; border-color: #f5c6cb;" onclick="deleteApplication(${idx})" title="Delete record and unlock retake restriction">Del/Reset</button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
@@ -639,9 +642,31 @@
       const app = apps[index];
       if (!app) return;
 
-      if (confirm(`Are you sure you want to DENY the application for ${app.robloxUser}?`)) {
+      if (confirm(`Are you sure you want to DENY the application for ${app.robloxUser}? This will also reset their submission lock so they may re-apply.`)) {
         app.status = 'Denied';
         saveApplications(apps);
+
+        // Reset device lock
+        localStorage.removeItem('mayflower_user_exam_submitted');
+        localStorage.removeItem('mayflower_user_transfer_submitted');
+        notifyStorageChange();
+        renderApplicationsTable();
+      }
+    }
+
+    function deleteApplication(index) {
+      const apps = getApplications();
+      const app = apps[index];
+      if (!app) return;
+
+      if (confirm(`Are you sure you want to DELETE the application record for ${app.robloxUser}? This will unblock retake restrictions.`)) {
+        apps.splice(index, 1);
+        saveApplications(apps);
+
+        // Reset device locks
+        localStorage.removeItem('mayflower_user_exam_submitted');
+        localStorage.removeItem('mayflower_user_transfer_submitted');
+        notifyStorageChange();
         renderApplicationsTable();
       }
     }
@@ -756,10 +781,18 @@
     }
 
     function removeRosterItem(id) {
-      if (confirm("Are you sure you want to remove this attorney from the Bar Roster?")) {
-        let roster = getRoster();
-        roster = roster.filter(item => item.id !== id);
-        saveRoster(roster);
+      const roster = getRoster();
+      const target = roster.find(item => item.id === id);
+      const nameStr = target ? target.name : 'this attorney';
+
+      if (confirm(`Are you sure you want to remove ${nameStr} from the Bar Roster? This will also unblock retake restrictions.`)) {
+        const updated = roster.filter(item => item.id !== id);
+        saveRoster(updated);
+
+        // Reset device submission locks so retaking/re-applying is unlocked
+        localStorage.removeItem('mayflower_user_exam_submitted');
+        localStorage.removeItem('mayflower_user_transfer_submitted');
+        notifyStorageChange();
         renderRosterTable();
       }
     }

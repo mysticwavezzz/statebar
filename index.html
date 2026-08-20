@@ -872,6 +872,12 @@
         document.getElementById('exam-view-gate').style.display = 'none';
         document.getElementById('exam-view-active').style.display = 'none';
         document.getElementById('exam-view-submitted').style.display = 'block';
+      } else {
+        document.getElementById('exam-view-submitted').style.display = 'none';
+        if (!isExamActive) {
+          document.getElementById('exam-view-gate').style.display = 'block';
+          document.getElementById('exam-view-active').style.display = 'none';
+        }
       }
 
       // Check Transfer status
@@ -879,6 +885,9 @@
       if (transferSubmitted) {
         document.getElementById('transfer-view-form').style.display = 'none';
         document.getElementById('transfer-view-submitted').style.display = 'block';
+      } else {
+        document.getElementById('transfer-view-form').style.display = 'block';
+        document.getElementById('transfer-view-submitted').style.display = 'none';
       }
     }
 
