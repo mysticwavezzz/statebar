@@ -12,7 +12,7 @@ function getFilingPanel(guildIconUrl) {
     })
     .setTitle('File with the Court')
     .setDescription('Pick the type of filing you would like to submit. A clerk will review it shortly.')
-    .setColor('#5C9CE6')
+    .setColor('#6B21A8')
     .addFields(
       { name: 'Criminal', value: 'File a criminal complaint.', inline: false },
       { name: 'Civil', value: 'File a civil claim.', inline: false },

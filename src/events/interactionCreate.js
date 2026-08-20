@@ -64,7 +64,7 @@ async function handleInteraction(interaction) {
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Case Assigned')
           .setDescription(`This case has been assigned to <@${targetUser.id}>\n\n**Executor:** <@${executor.id}>`)
-          .setColor('#5C9CE6');
+          .setColor('#6B21A8');
 
         await interaction.reply({ embeds: [embed] });
         return;
@@ -82,7 +82,7 @@ async function handleInteraction(interaction) {
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Appearance Request')
           .setDescription(`<@${applicant.id}> (${applicant.username}) is requesting to appear as **${partyType}** on **${caseCodeStr}**`)
-          .setColor('#5C9CE6');
+          .setColor('#6B21A8');
 
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder().setCustomId(`appear_approve_${applicant.id}_${interaction.channelId}`).setLabel('Approve').setStyle(ButtonStyle.Success),
@@ -110,7 +110,7 @@ async function handleInteraction(interaction) {
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Document Filed')
           .setDescription(`**Title:** ${title}\n\n${linksFormatted.length > 0 ? linksFormatted.join(' | ') : '*No external link provided*'}\n\n**Executor:** ${executor.username}`)
-          .setColor('#5C9CE6');
+          .setColor('#6B21A8');
 
         await interaction.reply({ embeds: [embed] });
         return;
@@ -133,7 +133,7 @@ async function handleInteraction(interaction) {
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Judicial Ruling Issued')
           .setDescription(`**Title:** ${title}\n\n${linksFormatted.length > 0 ? linksFormatted.join(' | ') : '*No external link provided*'}\n\n**Executor:** ${executor.username}`)
-          .setColor('#5C9CE6');
+          .setColor('#6B21A8');
 
         await interaction.reply({ embeds: [embed] });
         return;
@@ -310,7 +310,7 @@ async function handleInteraction(interaction) {
         const infoEmbed = new EmbedBuilder()
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Case Information')
-          .setColor('#000080')
+          .setColor('#6B21A8')
           .addFields(
             { name: 'Case Type', value: data.type, inline: true },
             { name: 'Case Code', value: caseCode, inline: true },
@@ -445,7 +445,7 @@ async function handleInteraction(interaction) {
           const clerkEmbed = new EmbedBuilder()
             .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
             .setTitle(`New Court Filing: ${type}`)
-            .setColor('#000080')
+            .setColor('#6B21A8')
             .addFields(
               { name: 'Filed By', value: `<@${interaction.user.id}> (${interaction.user.username})`, inline: true },
               { name: 'Filing Type', value: type, inline: true }

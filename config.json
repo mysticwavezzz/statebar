@@ -10,8 +10,8 @@
   "stateBarNickname": "barFLOW",
   "stateBarCertLogChannelId": "1539839511544991785",
   "colors": {
-    "softBlue": "#5C9CE6",
-    "primary": "#5C9CE6",
+    "courtPurple": "#6B21A8",
+    "primary": "#6B21A8",
     "success": "#2E7D32",
     "danger": "#C62828"
   }
