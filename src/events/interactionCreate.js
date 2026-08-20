@@ -529,11 +529,19 @@ async function handleInteraction(interaction) {
           ]
         });
 
-        // Notify user in plain text
+        const acceptedEmbed = new EmbedBuilder()
+          .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
+          .setTitle('Filing Accepted')
+          .setColor('#2E7D32')
+          .setDescription(`Your filing has been accepted as **${caseCode}**.`)
+          .addFields({ name: 'Case Channel', value: `<#${caseChannel.id}>`, inline: false })
+          .setFooter({ text: `Approved by Hon. ${interaction.user.username}` });
+
+        // Notify user via DM
         try {
           const applicantMember = await guild.members.fetch(data.applicant.id).catch(() => null);
           if (applicantMember) {
-            await applicantMember.send(`case approved <#${caseChannel.id}>`).catch(() => null);
+            await applicantMember.send({ embeds: [acceptedEmbed] }).catch(() => null);
           }
         } catch (e) {}
 
@@ -542,24 +550,21 @@ async function handleInteraction(interaction) {
           .setAuthor({ name: 'State of Mayflower District Courts', iconURL: guildIcon || undefined })
           .setTitle('Case Information')
           .setColor('#6B21A8')
+          .setDescription(`Your filing has been accepted as **${caseCode}**.`)
           .addFields(
             { name: 'Case Type', value: data.type, inline: true },
             { name: 'Case Code', value: caseCode, inline: true },
             { name: 'Prosecution', value: data.type === 'Criminal' ? 'People' : (data.petitioner || 'N/A'), inline: true },
             { name: 'Defendant', value: data.defendant || data.respondent || 'N/A', inline: true },
-            { name: 'Prosecuting Office', value: "Mayflower Department of Justice (DOJ)", inline: true },
             { name: 'Filed By', value: `<@${data.applicant.id}>`, inline: true },
-            { name: 'Filing', value: `[Filing](${data.filingLink})`, inline: false }
-          );
+            { name: 'Filing', value: `[Filing Document Link](${data.filingLink})`, inline: false }
+          )
+          .setFooter({ text: `Official Court Record • Issued by Hon. ${interaction.user.username}` });
 
         await caseChannel.send({ embeds: [infoEmbed] });
 
         // Update Clerk Review Embed
-        const origEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-          .setColor('#2E7D32')
-          .addFields({ name: 'Status', value: `Approved by <@${interaction.user.id}> | Case Code: \`${caseCode}\` (<#${caseChannel.id}>)` });
-
-        await interaction.message.edit({ embeds: [origEmbed], components: [] });
+        await interaction.message.edit({ embeds: [acceptedEmbed], components: [] });
         pendingFilings.delete(filingId);
         return;
       }
