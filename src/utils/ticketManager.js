@@ -56,7 +56,7 @@ async function createConsultationTicket(interaction, formData) {
 
   // Check active case load
   const activeCases = await getActiveCaseCount(guild, categoryId);
-  const isQueued = activeCases >= 10;
+  const isQueued = activeCases >= 3;
 
   // Clean channel name
   const sanitizedUsername = formData.robloxUser.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 20) || 'client';
@@ -129,7 +129,7 @@ async function createConsultationTicket(interaction, formData) {
     .addFields(
       { name: 'Roblox Username', value: `\`${formData.robloxUser}\``, inline: true },
       { name: 'Discord Client', value: `<@${user.id}>`, inline: true },
-      { name: 'Status', value: isQueued ? '`In Queue (Active Capacity: 10+ Cases)`' : '`Active Review`', inline: true },
+      { name: 'Status', value: isQueued ? '`In Queue (Active Capacity: 3 Cases)`' : '`Active Review`', inline: true },
       { name: 'Matter Overview', value: formData.description.slice(0, 1024) },
       { name: 'Evidence / Documentation', value: formData.evidence ? formData.evidence.slice(0, 1024) : 'None provided' }
     )

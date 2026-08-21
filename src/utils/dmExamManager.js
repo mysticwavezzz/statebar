@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const { validateRobloxUsername } = require('./roblox');
 const { addApplication } = require('./dbStore');
 const config = require('../../config.json');
@@ -380,7 +380,7 @@ async function handleDmExamAnswer(interaction, qIndex, selectedChoice) {
   const user = interaction.user;
   const session = dmSessions.get(user.id);
   if (!session) {
-    await interaction.reply({ content: 'Session expired or not found. Please click "Take Exam via DMs" to start.', ephemeral: true });
+    await interaction.reply({ content: 'Session expired or not found. Please click "Take Exam via DMs" to start.', flags: MessageFlags.Ephemeral });
     return;
   }
 

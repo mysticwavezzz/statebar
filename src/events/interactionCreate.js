@@ -7,7 +7,8 @@ const {
   ButtonStyle,
   EmbedBuilder,
   PermissionFlagsBits,
-  ChannelType
+  ChannelType,
+  MessageFlags
 } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
@@ -213,7 +214,7 @@ async function handleInteraction(interaction) {
 
       // F. /certify-bar user: score:
       if (commandName === 'certify-bar') {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const username = interaction.options.getString('user', true);
         const score = interaction.options.getString('score', true);
 
@@ -298,7 +299,7 @@ async function handleInteraction(interaction) {
           .setDescription(`Total Admitted Attorneys: **${roster.length}**\n\n${rosterFormatted}`)
           .setFooter({ text: 'Official Public Record • Only Visible to You' });
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -352,7 +353,7 @@ async function handleInteraction(interaction) {
         await interaction.reply({
           content: 'Is the respondent a person or an entity (e.g. a government department)?',
           components: [row],
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
         return;
       }
@@ -408,7 +409,7 @@ async function handleInteraction(interaction) {
         const data = pendingFilings.get(filingId);
 
         if (!data) {
-          await interaction.followUp({ content: 'Error: Filing data expired or already processed.', ephemeral: true });
+          await interaction.followUp({ content: 'Error: Filing data expired or already processed.', flags: MessageFlags.Ephemeral });
           return;
         }
 
@@ -646,7 +647,7 @@ async function handleInteraction(interaction) {
 
       // State Bar Exam DM Modal -> Starts Interactive Question-by-Question Exam
       if (customId === 'bar_exam_dm_modal') {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const robloxUser = interaction.fields.getTextInputValue('roblox_user').trim();
 
         const session = startDmExamSession(interaction.user, robloxUser);
@@ -664,7 +665,7 @@ async function handleInteraction(interaction) {
 
       // State Bar Transfer DM Modal
       if (customId === 'bar_transfer_dm_modal') {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const robloxUser = interaction.fields.getTextInputValue('roblox_user').trim();
         const discordUser = interaction.fields.getTextInputValue('discord_user').trim();
         const stateFrom = interaction.fields.getTextInputValue('state_from').trim();
@@ -717,7 +718,7 @@ async function handleInteraction(interaction) {
 
       // Roster Management Modal: Add Attorney
       if (customId === 'roster_modal_add') {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const robloxUser = interaction.fields.getTextInputValue('roblox_user').trim();
         const status = interaction.fields.getTextInputValue('status').trim() || 'Active';
 
@@ -759,7 +760,7 @@ async function handleInteraction(interaction) {
 
       // Roster Management Modal: Edit Attorney Status
       if (customId === 'roster_modal_edit') {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const targetUser = interaction.fields.getTextInputValue('target_user').trim().toLowerCase();
         const newStatus = interaction.fields.getTextInputValue('new_status').trim();
 
@@ -790,7 +791,7 @@ async function handleInteraction(interaction) {
 
       // Roster Management Modal: Remove Attorney
       if (customId === 'roster_modal_remove') {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const targetUser = interaction.fields.getTextInputValue('target_user').trim().toLowerCase();
 
         let roster = getRoster();
@@ -886,7 +887,7 @@ async function handleInteraction(interaction) {
       }
 
       if (customId.startsWith('filing_modal_')) {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         let type = 'Court Filing';
         let petitioner = null;
@@ -964,9 +965,9 @@ async function handleInteraction(interaction) {
     console.error('[Interaction Error]:', error);
     try {
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'An unexpected error occurred processing your request.', ephemeral: true });
+        await interaction.reply({ content: 'An unexpected error occurred processing your request.', flags: MessageFlags.Ephemeral });
       } else {
-        await interaction.followUp({ content: 'An unexpected error occurred processing your request.', ephemeral: true });
+        await interaction.followUp({ content: 'An unexpected error occurred processing your request.', flags: MessageFlags.Ephemeral });
       }
     } catch (e) {}
   }
