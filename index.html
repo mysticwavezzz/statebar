@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Windows 2000 - Stop 0x0000007B System Error</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body, html {
+      width: 100vw;
+      height: 100vh;
+      background-color: #0000AA;
+      color: #FFFFFF;
+      font-family: "Lucida Console", "Courier New", Courier, monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 40px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .bsod-content {
+      max-width: 900px;
+    }
+    .error-code {
+      background-color: #0000AA;
+      color: #FFFFFF;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+    h1 {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+    p {
+      margin-bottom: 18px;
+    }
+    ul {
+      margin-left: 30px;
+      margin-bottom: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    .tech-info {
+      margin-top: 25px;
+      border-top: 1px dashed #FFFFFF;
+      padding-top: 15px;
+    }
+    a.db-btn {
+      display: inline-block;
+      margin-top: 25px;
+      color: #FFFF55;
+      text-decoration: underline;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    a.db-btn:hover {
+      background-color: #FFFFFF;
+      color: #0000AA;
+      text-decoration: none;
+    }
+    .blink {
+      animation: blinker 1s linear infinite;
+    }
+    @keyframes blinker {
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bsod-content">
+    <div class="error-code">
+      *** STOP: 0x0000007B (0x80523C80, 0xC0000034, 0x00000000, 0x00000000)<br>
+      STATE_BAR_SYSTEM_MAINTENANCE_IN_PROGRESS
+    </div>
+
+    <p>A problem has been detected and the State Bar Web Portal has been shut down to prevent corruption of statutory examination records.</p>
+
+    <p>If this is the first time you've seen this Stop error screen, restart your browser. If this screen appears again, follow these steps:</p>
+
+    <ul>
+      <li>Verify that the State Bar Discord Server is properly connected.</li>
+      <li>If sitting for the 25-Question Statutory Examination or submitting a Reciprocal Bar Transfer, utilize the <strong>State Bar Discord Portal</strong> (select <code>Take Exam via DMs</code> or <code>Transfer via DMs</code>).</li>
+      <li>Disable or remove any newly installed browser extensions that interfere with statutory testing.</li>
+    </ul>
+
+    <div class="tech-info">
+      Technical information:<br><br>
+      *** STOP: 0x0000001E (0xC0000005, 0x8010C42A, 0x00000000, 0x00000001)<br>
+      *** MAYFLOWER_STATE_BAR.SYS - Address 8010C42A base at 80100000, DateStamp 60a4f10a
+    </div>
+
+    <a href="database.html" class="db-btn">[ F8 = Advanced Options -> Open Executive Database Portal ]</a>
+  </div>
+
+  <div>
+    Press CTRL+ALT+DEL to restart your workstation <span class="blink">_</span>
+  </div>
+</body>
+</html>

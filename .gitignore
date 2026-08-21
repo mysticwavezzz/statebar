@@ -1,5 +1,5 @@
-node_modules
+node_modules/
 .env
-token.json
-client_secret*.json
-*.pdf
+*.exe
+*.spec
+app.py

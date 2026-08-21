@@ -1,22 +1,32 @@
 {
-  "firmName": "State of Mayflower District Courts & Bar Workstation",
-  "judiciaryGuildId": "1537964864872521779",
-  "judiciaryNickname": "caseFLOW",
-  "judiciaryFilingChannelId": "1537964874527936584",
-  "clerkReviewChannelId": "1538067231236161616",
-  "pendingCasesCategoryId": "1539837232494682112",
-  "archiveChannelId": "1537964876368969758",
-  "stateBarGuildId": "1539382124543742062",
-  "stateBarNickname": "barFLOW",
-  "stateBarPortalChannelId": "1539382125382471774",
-  "stateBarReviewChannelId": "1539848757967986708",
-  "stateBarRosterChannelId": "1539848820056260628",
-  "stateBarCertLogChannelId": "1539839511544991785",
-  "websiteUrl": "https://mysticwavezzz.github.io/statebar/",
+  "firmName": "Law Office of M_ysticWavezzz",
+  "location": "Alyson, Harrison County",
   "colors": {
-    "courtPurple": "#6B21A8",
-    "primary": "#6B21A8",
+    "tan": "#E2D6B5",
+    "primary": "#E2D6B5",
     "success": "#2E7D32",
     "danger": "#C62828"
-  }
+  },
+  "leadership": [
+    {
+      "name": "M_ysticWavezzz",
+      "robloxUser": "M_ysticWavezzz",
+      "title": "Principal Attorney",
+      "experiences": [
+        {
+          "jurisdiction": "Harrison County",
+          "positions": [
+            "Acting Assistant District Attorney, Trial Bureau — Harrison County District Attorney's Office"
+          ]
+        }
+      ]
+    }
+  ],
+  "services": [
+    "Civil Representation",
+    "Contracts",
+    "Evictions",
+    "Legal Advice"
+  ],
+  "conflictNotice": "Due to active service in the District Attorney's Office, this practice cannot provide legal representation in matters or lawsuits against government employees acting in their official capacity."
 }
